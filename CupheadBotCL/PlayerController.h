@@ -8,6 +8,8 @@ public:
 
 	void set_hp(DWORD new_hp) { write_memory<DWORD>(proc, hp_p, new_hp); }
 	DWORD get_hp() { return read_memory<DWORD>(proc, hp_p); }
+
+	bool initialized() const { return base_p; }
 private:
 	DWORD get_player_controller_address();
 

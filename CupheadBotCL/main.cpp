@@ -50,9 +50,10 @@ int main()
 	printf("%x: %d\n", adr, read_memory<DWORD>(proc, adr));
 
 	PlayerController player_controller(proc);
-	while (true) {
+	while (player_controller.initialized()) {
 		player_controller.set_hp(3);
 		std::cout << player_controller.get_hp() << '\n';
+		Sleep(500);
 	}
 
 	CloseHandle(proc);

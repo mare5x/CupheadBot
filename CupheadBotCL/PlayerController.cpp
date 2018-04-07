@@ -8,6 +8,8 @@ PlayerController::PlayerController(HANDLE process, DWORD _base_p)
 	if (!base_p)
 		base_p = get_player_controller_address();
 
+	if (!base_p) std::cout << "PlayerController not found! Make sure to start a level.\n";
+
 	hp_p = base_p + 0x60;
 	hp_max_p = base_p + 0x5C;
 }
@@ -40,6 +42,7 @@ DWORD PlayerController::get_player_controller_address()
 	// 1. Find the function where the hook is to be placed based on the function's signature.
 	DWORD original_func_adr = find_function(proc, func_header, sizeof(func_header) / sizeof(BYTE));
 	if (!original_func_adr) return 0;
+	else std::cout << "Found function at: " << std::hex << original_func_adr << '\n';
 
 	DWORD hook_at = original_func_adr + 0x23;
 

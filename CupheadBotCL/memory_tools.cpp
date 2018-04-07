@@ -3,6 +3,9 @@
 #include "memory_tools.h"
 
 
+const size_t BUFFER_SIZE = 4096;  // bytes
+
+
 void log_error(const char* msg)
 {
 	std::cout << msg << ", ERROR: " << GetLastError() << '\n';
@@ -41,55 +44,83 @@ DWORD get_base_address(HANDLE proc)
 }
 
 
+bool equal(const BYTE* buf1, const BYTE* buf2, size_t size)
+{
+	for (size_t i = 0; i < size; ++i) {
+		if (buf1[i] != buf2[i])
+			return false;
+	}
+	return true;
+}
+
+
 /* Returns the next memory page after base_adr that has the PAGE_EXECUTE_READWRITE permission. */
-MemoryPage next_memory_page(HANDLE proc, DWORD base_adr)
+MemoryRegion next_memory_page(HANDLE proc, DWORD base_adr)
 {
 	MEMORY_BASIC_INFORMATION mem_info;
 	while (VirtualQueryEx(proc, (LPVOID)base_adr, &mem_info, sizeof(mem_info)) != 0) {
 		if (mem_info.AllocationProtect & PAGE_EXECUTE_READWRITE) {
 			printf("%x %d %x\n", mem_info.BaseAddress, mem_info.RegionSize, mem_info.AllocationProtect);
-			return MemoryPage((DWORD)mem_info.BaseAddress, mem_info.RegionSize);
+			return MemoryRegion((DWORD)mem_info.BaseAddress, mem_info.RegionSize);
 		}
 		base_adr += mem_info.RegionSize;
 	}
-	return MemoryPage();
+	return MemoryRegion();
 }
 
 
-MemoryPage first_memory_page(HANDLE proc)
+MemoryRegion first_memory_page(HANDLE proc)
 {
 	return next_memory_page(proc, 0);
 }
 
 
-/*
-Note: Cuphead uses JIT (just in time) compilation, so make sure the desired
-function has been assembled in memory before running this function.
-
-improvement idea: scan until function header -> check if pattern in function -> repeat
+/** Function header must have the following pattern:
+	push ebp
+	mov ebp, esp
 */
-DWORD find_function(HANDLE proc, BYTE func_header[], size_t size)
+bool is_function_header(HANDLE proc, BYTE* buf)
 {
-	std::vector<BYTE> mem_buffer(size);
+	static const BYTE func_header[3] = {
+		0x55, 0x8B, 0xEC
+	};
 
-	MemoryPage page = first_memory_page(proc);
+	return equal(func_header, buf, 3);
+}
+
+
+/** Returns the base address of the function that matches the given func_header or 0 if it doesn't exist.
+
+	Note: Cuphead uses JIT (just in time) compilation, so make sure the desired
+	function has been assembled in memory before running this function.
+*/
+DWORD find_function(HANDLE proc, BYTE func_header[], size_t header_size)
+{
+	MemoryRegion page = first_memory_page(proc);
+	BYTE buffer[BUFFER_SIZE] = {};
+
 	while (page.valid()) {
-		for (DWORD adr = page.base_adr; adr < page.base_adr + page.size; ++adr) {
-			read_memory(proc, adr, mem_buffer.data(), size);
-			bool found = true;
-			for (size_t i = 0; i < size; ++i) {
-				if (func_header[i] != mem_buffer[i]) {
-					found = false;
-					break;
-				}
-			}
-			if (found) {
-				printf("found func at: %x\n", adr);
-				return adr;
-			}
-		}
+		DWORD address = page.base_adr;
+		size_t func_header_idx = 0;
 
-		page = next_memory_page(proc, page.base_adr + page.size + 1);
+		do {
+			size_t buffer_size = min(BUFFER_SIZE, page.end() - address);
+			read_memory<BYTE>(proc, address, buffer, buffer_size);
+
+			for (size_t i = 0; i < buffer_size; ++i) {
+				if (func_header[func_header_idx] == buffer[i]) {
+					++func_header_idx;
+					if (func_header_idx == header_size)
+						return address + i + 1 - header_size;
+				}
+				else
+					func_header_idx = 0;
+			}
+
+			address += buffer_size;
+		} while (address < page.end());
+
+		page = next_memory_page(proc, page.end() + 1);
 	}
 
 	return 0;

@@ -4,14 +4,16 @@
 #include <string>
 
 
-struct MemoryPage {
-	MemoryPage() : base_adr(0), size(0) {}
-	MemoryPage(DWORD _base_adr, SIZE_T _size) : base_adr(_base_adr), size(_size) {}
+struct MemoryRegion {
+	MemoryRegion() : base_adr(0), size(0) {}
+	MemoryRegion(DWORD _base_adr, SIZE_T _size) : base_adr(_base_adr), size(_size) {}
 
 	DWORD base_adr;
 	SIZE_T size;
 
 	bool valid() { return size > 0; }
+
+	DWORD end() { return base_adr + size; }
 };
 
 
@@ -56,10 +58,10 @@ DWORD protect_memory(HANDLE proc, DWORD address, DWORD protection)
 }
 
 
-MemoryPage first_memory_page(HANDLE proc);
+MemoryRegion first_memory_page(HANDLE proc);
 
 /* Returns the next memory page after base_adr that has the PAGE_EXECUTE_READWRITE permission. */
-MemoryPage next_memory_page(HANDLE proc, DWORD base_adr);
+MemoryRegion next_memory_page(HANDLE proc, DWORD base_adr);
 
 
 DWORD find_function(HANDLE proc, BYTE func_header[], size_t size);
