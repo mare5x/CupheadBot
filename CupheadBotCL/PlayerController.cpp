@@ -12,6 +12,8 @@ PlayerController::PlayerController(HANDLE process, DWORD _base_p)
 
 	hp_p = base_p + 0x60;
 	hp_max_p = base_p + 0x5C;
+
+	hard_invincibility_p = base_p + 0x84;
 }
 
 /** Gets the PlayerController address using jump hooking and code injection.

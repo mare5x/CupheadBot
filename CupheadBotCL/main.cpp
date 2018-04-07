@@ -50,10 +50,10 @@ int main()
 	printf("%x: %d\n", adr, read_memory<DWORD>(proc, adr));
 
 	PlayerController player_controller(proc);
-	while (player_controller.initialized()) {
-		player_controller.set_hp(3);
-		std::cout << player_controller.get_hp() << '\n';
-		Sleep(500);
+	if (player_controller.initialized()) {
+		player_controller.set_hard_invincibility(true);
+		player_controller.set_hp(5);
+		std::cout << "HP: " << player_controller.get_hp() << '\n';
 	}
 
 	CloseHandle(proc);
