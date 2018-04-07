@@ -124,6 +124,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="memory_tools.cpp" />
+    <ClCompile Include="PlayerController.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="memory_tools.h" />
+    <ClInclude Include="PlayerController.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
