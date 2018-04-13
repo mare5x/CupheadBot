@@ -13,7 +13,7 @@ PlayerController::PlayerController(HANDLE process, DWORD _base_p)
 	hp_p = base_p + 0x60;
 	hp_max_p = base_p + 0x5C;
 
-	hard_invincibility_p = base_p + 0x84;
+	super_invincibility_p = base_p + 0x6c;
 
 	jump_nop_address = get_jump_nop_address();
 }
