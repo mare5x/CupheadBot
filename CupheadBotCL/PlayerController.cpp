@@ -15,6 +15,10 @@ PlayerController::PlayerController(HANDLE process, DWORD _base_p)
 
 	super_invincibility_p = base_p + 0x6c;
 
+	DWORD loadout_p = read_memory<DWORD>(proc, base_p + 0x38);
+	primary_weapon_p = loadout_p + 0x8;
+	secondary_weapon_p = loadout_p + 0xC;
+
 	jump_nop_address = get_jump_nop_address();
 }
 

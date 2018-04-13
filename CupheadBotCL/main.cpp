@@ -49,6 +49,7 @@ int main()
 	wallhack_on(proc);
 	printf("%x: %d\n", adr, read_memory<DWORD>(proc, adr));
 
+	// functionality test
 	PlayerController player_controller(proc);
 	if (player_controller.initialized()) {
 		player_controller.set_hard_invincibility(true);
@@ -59,6 +60,20 @@ int main()
 			if (input == "j") {
 				player_controller.toggle_inf_jumping();
 				std::cout << "INFINITE JUMPING: " << (player_controller.infinite_jumping_enabled() ? "ON" : "OFF") << '\n';
+			}
+			else if (input == "w1") {
+				int weapon = 1;
+				std::cin >> weapon;
+				switch (weapon) {
+				case 1:
+					player_controller.set_primary_weapon(PlayerController::WEAPON::PEASHOOTER);
+					break;
+				case 2:
+					player_controller.set_primary_weapon(PlayerController::WEAPON::SPREAD);
+					break;
+				default:
+					break;
+				}
 			}
 		}
 	}
