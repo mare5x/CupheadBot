@@ -14,6 +14,22 @@ PlayerController::PlayerController(HANDLE process, DWORD _base_p)
 	hp_max_p = base_p + 0x5C;
 
 	hard_invincibility_p = base_p + 0x84;
+
+	jump_nop_address = get_jump_nop_address();
+}
+
+void PlayerController::toggle_inf_jumping()
+{
+	const BYTE orig_bytes[] = {
+		0x0F, 0x85, 0xBC, 0x01, 0x00, 0x00
+	};
+
+	infinite_jumping = !infinite_jumping;
+	
+	if (infinite_jumping)  // enable
+		nop_address(proc, jump_nop_address, sizeof(orig_bytes) / sizeof(BYTE));
+	else
+		write_code_buffer(proc, jump_nop_address, orig_bytes, sizeof(orig_bytes) / sizeof(BYTE));
 }
 
 /** Gets the PlayerController address using jump hooking and code injection.
@@ -97,4 +113,16 @@ DWORD PlayerController::get_player_controller_address()
 	protect_memory<BYTE[original_code_size]>(proc, hook_at, old_protection);
 
 	return player_controller_address;
+}
+
+/* Finds the address of the instruction to NOP that allows infinite jumping. */
+DWORD PlayerController::get_jump_nop_address()
+{
+	const BYTE signature[] = {
+		0x0F, 0x85, 0xBC, 0x01, 0x00, 0x00,
+		0x8B, 0x47, 0x38, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00
+	};
+	DWORD adr = find_function(proc, signature, sizeof(signature) / sizeof(BYTE));
+	std::cout << "JUMP NOP ADDRESS: " << std::hex << adr << '\n';
+	return adr;
 }

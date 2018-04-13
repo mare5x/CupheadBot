@@ -54,6 +54,13 @@ int main()
 		player_controller.set_hard_invincibility(true);
 		player_controller.set_hp(5);
 		std::cout << "HP: " << player_controller.get_hp() << '\n';
+		std::string input;
+		while (std::cin >> input) {
+			if (input == "j") {
+				player_controller.toggle_inf_jumping();
+				std::cout << "INFINITE JUMPING: " << (player_controller.infinite_jumping_enabled() ? "ON" : "OFF") << '\n';
+			}
+		}
 	}
 
 	CloseHandle(proc);

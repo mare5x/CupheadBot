@@ -50,10 +50,26 @@ void write_memory(HANDLE proc, DWORD address, T val)
 
 
 template<typename T>
+void write_memory(HANDLE proc, DWORD address, const T* buffer, size_t size)
+{
+	WriteProcessMemory(proc, (LPVOID)(address), buffer, sizeof(T) * size, NULL);
+}
+
+
+template<typename T>
 DWORD protect_memory(HANDLE proc, DWORD address, DWORD protection)
 {
 	DWORD old_protection;
 	VirtualProtectEx(proc, (LPVOID)address, sizeof(T), protection, &old_protection);
+	return old_protection;
+}
+
+
+template<typename T>
+DWORD protect_memory(HANDLE proc, DWORD address, DWORD protection, size_t size)
+{
+	DWORD old_protection;
+	VirtualProtectEx(proc, (LPVOID)address, sizeof(T) * size, protection, &old_protection);
 	return old_protection;
 }
 
@@ -64,7 +80,7 @@ MemoryRegion first_memory_page(HANDLE proc);
 MemoryRegion next_memory_page(HANDLE proc, DWORD base_adr);
 
 
-DWORD find_function(HANDLE proc, BYTE func_header[], size_t size);
+DWORD find_function(HANDLE proc, const BYTE func_header[], size_t size);
 
 
 /** Place a JMP instruction at hook_at address that jumps to jmp_adr.
@@ -73,3 +89,10 @@ bytes_to_replace are the number of bytes to be replaced by the new JMP instructi
 (5 bytes for the JMP and bytes_to_replace - 5 bytes for leftover instructions that wouldn't work with the new JMP ...)
 */
 void jump_hook(HANDLE proc, DWORD hook_at, DWORD jmp_adr, int bytes_to_replace);
+
+
+void nop_address(HANDLE proc, DWORD nop_at, size_t bytes_to_replace);
+
+
+/* Writes the buffer of instruction bytes to the given address. */
+void write_code_buffer(HANDLE proc, DWORD address, const BYTE* buffer, size_t size);

@@ -94,7 +94,7 @@ bool is_function_header(HANDLE proc, BYTE* buf)
 	Note: Cuphead uses JIT (just in time) compilation, so make sure the desired
 	function has been assembled in memory before running this function.
 */
-DWORD find_function(HANDLE proc, BYTE func_header[], size_t header_size)
+DWORD find_function(HANDLE proc, const BYTE func_header[], size_t header_size)
 {
 	MemoryRegion page = first_memory_page(proc);
 	BYTE buffer[BUFFER_SIZE] = {};
@@ -150,4 +150,25 @@ void jump_hook(HANDLE proc, DWORD hook_at, DWORD jmp_adr, int bytes_to_replace)
 	}
 
 	protect_memory<DWORD[3]>(proc, hook_at, old_protection);
+}
+
+
+void nop_address(HANDLE proc, DWORD nop_at, size_t bytes_to_replace)
+{
+	DWORD old_protection = protect_memory<BYTE>(proc, nop_at, PAGE_EXECUTE_READWRITE, bytes_to_replace);
+
+	std::vector<BYTE> nop_buffer(bytes_to_replace, 0x90);
+	write_memory<BYTE>(proc, nop_at, nop_buffer.data(), bytes_to_replace);
+
+	protect_memory<BYTE>(proc, nop_at, old_protection, bytes_to_replace);
+}
+
+
+void write_code_buffer(HANDLE proc, DWORD address, const BYTE * buffer, size_t size)
+{
+	DWORD old_protection = protect_memory<BYTE>(proc, address, PAGE_EXECUTE_READWRITE, size);
+	
+	write_memory<BYTE>(proc, address, buffer, size);
+
+	protect_memory<BYTE>(proc, address, old_protection, size);
 }
