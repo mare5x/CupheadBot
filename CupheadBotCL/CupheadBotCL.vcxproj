@@ -128,6 +128,7 @@
     <ClCompile Include="PlayerController.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="InjectionHelper.h" />
     <ClInclude Include="memory_tools.h" />
     <ClInclude Include="PlayerController.h" />
   </ItemGroup>

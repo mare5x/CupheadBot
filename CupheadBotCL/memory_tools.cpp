@@ -60,7 +60,7 @@ MemoryRegion next_memory_page(HANDLE proc, DWORD base_adr)
 	MEMORY_BASIC_INFORMATION mem_info;
 	while (VirtualQueryEx(proc, (LPVOID)base_adr, &mem_info, sizeof(mem_info)) != 0) {
 		if (mem_info.AllocationProtect & PAGE_EXECUTE_READWRITE) {
-			printf("%x %d %x\n", mem_info.BaseAddress, mem_info.RegionSize, mem_info.AllocationProtect);
+			// printf("%x %d %x\n", mem_info.BaseAddress, mem_info.RegionSize, mem_info.AllocationProtect);
 			return MemoryRegion((DWORD)mem_info.BaseAddress, mem_info.RegionSize);
 		}
 		base_adr += mem_info.RegionSize;
