@@ -96,3 +96,7 @@ void nop_address(HANDLE proc, DWORD nop_at, size_t bytes_to_replace);
 
 /* Writes the buffer of instruction bytes to the given address. */
 void write_code_buffer(HANDLE proc, DWORD address, const BYTE* buffer, size_t size);
+
+
+/* Injects a dll_path DLL into the proc. */
+void load_dll(HANDLE proc, const wchar_t* dll_path);

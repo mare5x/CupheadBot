@@ -172,3 +172,30 @@ void write_code_buffer(HANDLE proc, DWORD address, const BYTE * buffer, size_t s
 
 	protect_memory<BYTE>(proc, address, old_protection, size);
 }
+
+
+void load_dll(HANDLE proc, const wchar_t* dll_path)
+{
+	// write the dll path to process memory 
+	size_t path_len = wcslen(dll_path) + 1;
+	LPVOID remote_string_address = VirtualAllocEx(proc, NULL, path_len * 2, MEM_COMMIT, PAGE_EXECUTE);
+	WriteProcessMemory(proc, remote_string_address, dll_path, path_len * 2, NULL);
+
+	// get the address of the LoadLibrary()
+	HMODULE k32 = GetModuleHandleA("kernel32.dll");
+	LPVOID load_library_adr = GetProcAddress(k32, "LoadLibraryW");
+
+	// create the thread
+	HANDLE thread = CreateRemoteThread(proc, NULL, NULL, (LPTHREAD_START_ROUTINE)load_library_adr, remote_string_address, NULL, NULL);
+
+	// finish and clean up
+	WaitForSingleObject(thread, INFINITE);
+
+	//DWORD exit_code;
+	//GetExitCodeThread(thread, &exit_code);
+	//std::cout << "THREAD: " << exit_code << '\n';
+
+	CloseHandle(thread);
+
+	VirtualFreeEx(proc, remote_string_address, path_len, MEM_RELEASE);
+}

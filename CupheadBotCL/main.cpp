@@ -42,6 +42,9 @@ int main()
 		return -1;
 	}
 
+	// copy dll to Cuphead game directory
+	load_dll(proc, L"C:\\Users\\Mare5\\projects\\hacking\\CupheadBot\\CupheadBotCL\\Debug\\CupheadBotDLL.dll");
+
 	std::cout << "Base: " << std::hex << get_base_address(proc) << '\n';
 
 	DWORD adr = get_wallhack_address(proc);

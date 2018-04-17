@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CupheadBotCL", "CupheadBotCL\CupheadBotCL.vcxproj", "{5B8B15AF-1806-4BA5-874E-6B5FF3AEADA1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CupheadBotDLL", "CupheadBotDLL\CupheadBotDLL.vcxproj", "{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{5B8B15AF-1806-4BA5-874E-6B5FF3AEADA1}.Release|x64.Build.0 = Release|x64
 		{5B8B15AF-1806-4BA5-874E-6B5FF3AEADA1}.Release|x86.ActiveCfg = Release|Win32
 		{5B8B15AF-1806-4BA5-874E-6B5FF3AEADA1}.Release|x86.Build.0 = Release|Win32
+		{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}.Debug|x64.ActiveCfg = Debug|x64
+		{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}.Debug|x64.Build.0 = Debug|x64
+		{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}.Debug|x86.ActiveCfg = Debug|Win32
+		{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}.Debug|x86.Build.0 = Debug|Win32
+		{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}.Release|x64.ActiveCfg = Release|x64
+		{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}.Release|x64.Build.0 = Release|x64
+		{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}.Release|x86.ActiveCfg = Release|Win32
+		{F8AFCDCE-AD6F-4B1A-B3DC-1A9C813A2DF2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
