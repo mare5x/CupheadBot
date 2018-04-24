@@ -43,7 +43,7 @@ int main()
 	}
 
 	// copy dll to Cuphead game directory
-	load_dll(proc, L"C:\\Users\\Mare5\\projects\\hacking\\CupheadBot\\CupheadBotCL\\Debug\\CupheadBotDLL.dll");
+	HMODULE dll_handle = load_dll(proc, L"C:\\Users\\Mare5\\projects\\hacking\\CupheadBot\\CupheadBotCL\\Debug\\CupheadBotDLL.dll");
 
 	std::cout << "Base: " << std::hex << get_base_address(proc) << '\n';
 
@@ -59,8 +59,10 @@ int main()
 		std::cout << "HP: " << player_controller.get_hp() << '\n';
 		std::string input;
 		while (std::cin >> input) {
-			if (input == "exit")
+			if (input == "exit") {
+				unload_dll(proc, dll_handle);
 				break;
+			}
 			else if (input == "j") {
 				player_controller.toggle_inf_jumping();
 				std::cout << "INFINITE JUMPING: " << (player_controller.infinite_jumping_enabled() ? "ON" : "OFF") << '\n';

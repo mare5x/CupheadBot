@@ -98,5 +98,10 @@ void nop_address(HANDLE proc, DWORD nop_at, size_t bytes_to_replace);
 void write_code_buffer(HANDLE proc, DWORD address, const BYTE* buffer, size_t size);
 
 
-/* Injects a dll_path DLL into the proc. */
-void load_dll(HANDLE proc, const wchar_t* dll_path);
+/** Injects a dll_path DLL into the proc and returns the handle to the dll. 
+	The handle is "owned" by the target process (it points to the base address of the loaded dll). 
+*/
+HMODULE load_dll(HANDLE proc, const wchar_t* dll_path);
+
+
+void unload_dll(HANDLE proc, HMODULE dll_handle);

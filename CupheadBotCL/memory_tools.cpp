@@ -174,7 +174,7 @@ void write_code_buffer(HANDLE proc, DWORD address, const BYTE * buffer, size_t s
 }
 
 
-void load_dll(HANDLE proc, const wchar_t* dll_path)
+HMODULE load_dll(HANDLE proc, const wchar_t* dll_path)
 {
 	// write the dll path to process memory 
 	size_t path_len = wcslen(dll_path) + 1;
@@ -191,11 +191,30 @@ void load_dll(HANDLE proc, const wchar_t* dll_path)
 	// finish and clean up
 	WaitForSingleObject(thread, INFINITE);
 
-	//DWORD exit_code;
-	//GetExitCodeThread(thread, &exit_code);
-	//std::cout << "THREAD: " << exit_code << '\n';
+	DWORD dll_handle;
+	GetExitCodeThread(thread, &dll_handle);
 
 	CloseHandle(thread);
 
 	VirtualFreeEx(proc, remote_string_address, path_len, MEM_RELEASE);
+
+	return (HMODULE)dll_handle;
+}
+
+
+void unload_dll(HANDLE proc, HMODULE dll_handle)
+{
+	// get the address of the FreeLibrary()
+	HMODULE k32 = GetModuleHandleA("kernel32.dll");
+	LPVOID free_library_adr = GetProcAddress(k32, "FreeLibrary");
+
+	HANDLE thread = CreateRemoteThread(proc, NULL, NULL, (LPTHREAD_START_ROUTINE)free_library_adr, dll_handle, NULL, NULL);
+
+	WaitForSingleObject(thread, INFINITE);
+
+	DWORD exit_code;
+	GetExitCodeThread(thread, &exit_code);
+	if (!exit_code) log_error("Unload_dll");
+
+	CloseHandle(thread);
 }
