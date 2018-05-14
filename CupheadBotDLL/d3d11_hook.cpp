@@ -25,8 +25,15 @@ HRESULT __stdcall present_callback(IDXGISwapChain* pSwapChain, UINT SyncInterval
 	pSwapChain->GetDevice(__uuidof(g_p_device), (void**)&g_p_device);
 	g_p_device->GetImmediateContext(&g_p_device_context);
 
-	// call the user defined implementation
-	present_impl(g_p_device, g_p_device_context, pSwapChain);
+	// call the user defined implementation 
+	if (present_impl(g_p_device, g_p_device_context, pSwapChain)) {
+		// unhook d3d11 cleanly
+		// restore original code and jump directly to the original instead of going through the post detour cave
+		// Instead of calling Present() it would be better to jump to it, because now Present returns its value to this function
+		// and this function returns the value to the function that called Present initially
+		unhook_d3d11();
+		return ((d3d11_PresentHook)(g_p_present))(pSwapChain, SyncInterval, Flags);
+	}
 
 	// return to the original Present function using the 'original' parameters, by first going to the 
 	// code cave which contains the code replaced by the detour hook in Present

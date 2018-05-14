@@ -46,8 +46,13 @@ HRESULT __stdcall present_callback(IDXGISwapChain* pSwapChain, UINT SyncInterval
 void hook_d3d11();
 
 
+/** Removes the d3d11 hook on the Present function. 
+	NOTE: this works outside present_impl. To unhook from present_impl return true.
+*/
 void unhook_d3d11();
 
 
-/* Define your own implementation of the Present() function externally. Called from Present() each frame. */
-extern void present_impl(ID3D11Device* device, ID3D11DeviceContext* device_context, IDXGISwapChain* swap_chain);
+/** Define your own implementation of the Present() function externally. Called from Present() each frame. 
+	Return true if you want to unhook d3d11 cleanly from inside this function.
+*/
+extern bool present_impl(ID3D11Device* device, ID3D11DeviceContext* device_context, IDXGISwapChain* swap_chain);

@@ -60,7 +60,7 @@ int main()
 		std::string input;
 		while (std::cin >> input) {
 			if (input == "exit") {
-				unload_dll(proc, dll_handle);
+				//unload_dll(proc, dll_handle);
 				break;
 			}
 			else if (input == "j") {
