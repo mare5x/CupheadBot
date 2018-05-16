@@ -9,24 +9,25 @@
 
 
 d3d11_PresentHook p_post_present_hook = nullptr;
+d3d11_present_impl p_present_impl = nullptr;
 
-IDXGISwapChain* g_p_swapchain;
-ID3D11Device* g_p_device;
-ID3D11DeviceContext* g_p_device_context;
+IDXGISwapChain* d3d11_hook::g_p_swapchain;
+ID3D11Device*d3d11_hook:: g_p_device;
+ID3D11DeviceContext* d3d11_hook::g_p_device_context;
 
 DWORD g_p_present;
 
 BYTE* post_detour_cave = nullptr;
 
 
-HRESULT __stdcall present_callback(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
+HRESULT __stdcall d3d11_hook::present_callback(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
 	// this function's declaration/signature must be identical to the original Present function's signature
 	pSwapChain->GetDevice(__uuidof(g_p_device), (void**)&g_p_device);
 	g_p_device->GetImmediateContext(&g_p_device_context);
 
 	// call the user defined implementation 
-	if (present_impl(g_p_device, g_p_device_context, pSwapChain)) {
+	if (p_present_impl(g_p_device, g_p_device_context, pSwapChain)) {
 		// unhook d3d11 cleanly
 		// restore original code and jump directly to the original instead of going through the post detour cave
 		// Instead of calling Present() it would be better to jump to it, because now Present returns its value to this function
@@ -41,8 +42,10 @@ HRESULT __stdcall present_callback(IDXGISwapChain* pSwapChain, UINT SyncInterval
 }
 
 
-void hook_d3d11()
+void d3d11_hook::hook_d3d11(d3d11_present_impl cb)
 {
+	p_present_impl = cb;
+
 	// these are all things necessary to create a device and swap chain
 	DummyWindow window = DummyWindow();
 
@@ -83,7 +86,7 @@ void hook_d3d11()
 	while (!g_p_device) { Sleep(10); }
 }
 
-void unhook_d3d11()
+void d3d11_hook::unhook_d3d11()
 {
 	// restore the Present detour hook by writing the original code back to its original place in the Present function
 	remove_detour_hook(g_p_present, post_detour_cave, 5);

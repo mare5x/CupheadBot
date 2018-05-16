@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CupheadBot.cpp" />
     <ClCompile Include="d3d11_hook.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -156,8 +157,10 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_impl_dx11.cpp" />
     <ClCompile Include="memory_tools.cpp" />
+    <ClCompile Include="CupheadBotUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CupheadBot.h" />
     <ClInclude Include="d3d11_hook.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
@@ -167,6 +170,7 @@
     <ClInclude Include="imgui\stb_textedit.h" />
     <ClInclude Include="imgui\stb_truetype.h" />
     <ClInclude Include="memory_tools.h" />
+    <ClInclude Include="CupheadBotUI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
