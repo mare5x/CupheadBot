@@ -80,7 +80,7 @@ MemoryRegion first_memory_page(HANDLE proc);
 MemoryRegion next_memory_page(HANDLE proc, DWORD base_adr);
 
 
-DWORD find_function(HANDLE proc, const BYTE func_header[], size_t size);
+DWORD find_signature(HANDLE proc, const BYTE signature[], size_t size);
 
 
 /** Place a JMP instruction at hook_at address that jumps to jmp_adr.

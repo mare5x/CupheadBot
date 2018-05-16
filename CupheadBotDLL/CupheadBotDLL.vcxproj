@@ -158,6 +158,7 @@
     <ClCompile Include="imgui\imgui_impl_dx11.cpp" />
     <ClCompile Include="memory_tools.cpp" />
     <ClCompile Include="CupheadBotUI.cpp" />
+    <ClCompile Include="PlayerControllerBot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CupheadBot.h" />
@@ -171,6 +172,7 @@
     <ClInclude Include="imgui\stb_truetype.h" />
     <ClInclude Include="memory_tools.h" />
     <ClInclude Include="CupheadBotUI.h" />
+    <ClInclude Include="PlayerControllerBot.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

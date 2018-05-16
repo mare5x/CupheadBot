@@ -6,6 +6,13 @@ CupheadBot::CupheadBot(HMODULE dll_handle)
 {
 	cuphead_window_handle = FindWindow(NULL, L"Cuphead");
 	cuphead_module = GetModuleHandle(NULL);
+
+	player_controller.init();
+}
+
+void CupheadBot::exit()
+{
+	player_controller.exit();
 }
 
 void CupheadBot::wallhack(bool enable)

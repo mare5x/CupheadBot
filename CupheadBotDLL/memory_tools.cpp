@@ -1,5 +1,18 @@
 #include "memory_tools.h"
 
+const size_t JMP_SIZE = 5;  // bytes
+const size_t BUFFER_SIZE = 4096;  // bytes
+
+
+void write_code_buffer(DWORD address, const BYTE * buffer, size_t size)
+{
+	DWORD old_protection = protect_memory<BYTE>(address, PAGE_EXECUTE_READWRITE, size);
+
+	write_memory<BYTE>(address, buffer, size);
+
+	protect_memory<BYTE>(address, old_protection, size);
+}
+
 
 DWORD get_VF(DWORD class_adr, DWORD func_idx)
 {
@@ -28,52 +41,42 @@ DWORD hook_vtable(DWORD class_adr, DWORD func_idx, DWORD new_func)
 }
 
 
-/** Places a JMP hook at hook_at.
-The original bytes replaced are returned and should be restored ASAP.
-(The hook must be unhooked immediately, since the extra byte after the current function gets replaced ...)
-*/
-const std::array<BYTE, 5> jump_hook(DWORD hook_at, DWORD new_func)
+DWORD jump_hook(DWORD hook_at, DWORD jump_to, size_t size)
 {
-	DWORD old_protection = protect_memory<BYTE[5]>(hook_at, PAGE_EXECUTE_READWRITE);
+	DWORD offset = jump_to - hook_at - JMP_SIZE;
 
-	std::array<BYTE, 5> originals;
-	for (size_t i = 0; i < 5; ++i)
-		originals[i] = read_memory<BYTE>(hook_at + i);
+	DWORD old_protection = protect_memory<BYTE>(hook_at, PAGE_EXECUTE_READWRITE, size);
 
-	DWORD new_offset = new_func - hook_at - 5;
-	write_memory<BYTE>(hook_at, 0xE9);  // JMP
-	write_memory<DWORD>(hook_at + 1, new_offset);
+	write_memory<BYTE>(hook_at, 0xE9);
+	write_memory<DWORD>(hook_at + 1, offset);
 
-	protect_memory<BYTE[5]>(hook_at, old_protection);
+	for (size_t i = JMP_SIZE; i < size; ++i)
+		write_memory<BYTE>(hook_at + i, 0x90);
 
-	return originals;
+	protect_memory<BYTE>(hook_at, old_protection, size);
+
+	return hook_at + JMP_SIZE;
 }
 
 
-/* Restores the JMP hook at hook_at with the original bytes returned by jump_hook. */
-void jump_unhook(DWORD hook_at, const std::array<BYTE, 5>& originals)
+void jump_unhook(DWORD hook_at, const BYTE * original_bytes, size_t size)
 {
-	DWORD old_protection = protect_memory<BYTE[5]>(hook_at, PAGE_EXECUTE_READWRITE);
-
-	for (size_t i = 0; i < 5; ++i)
-		write_memory<BYTE>(hook_at + i, originals[i]);
-
-	protect_memory<BYTE[5]>(hook_at, old_protection);
+	write_code_buffer(hook_at, original_bytes, size);
 }
 
 
 /* Delete[] the returned buffer. */
 BYTE* detour_hook(DWORD hook_at, DWORD detour, size_t length)
 {
-	BYTE* post_detour_cave = new BYTE[length + 5];	 // a code cave directly in the target process' memory
+	BYTE* post_detour_cave = new BYTE[length + JMP_SIZE];	 // a code cave directly in the target process' memory
 	memcpy(post_detour_cave, (BYTE*)hook_at, length);  // copy original code
 	post_detour_cave[length] = 0xE9;					 // add JMP back to original code (hook_at + ...)
 	*(DWORD*)(post_detour_cave + length + 1) = (hook_at + length) - ((DWORD)(post_detour_cave)+length + 5);
 
-	DWORD old_protection = protect_memory<BYTE[5]>(hook_at, PAGE_EXECUTE_READWRITE);
+	DWORD old_protection = protect_memory<BYTE[JMP_SIZE]>(hook_at, PAGE_EXECUTE_READWRITE);
 	write_memory<BYTE>(hook_at, 0xE9);  // JMP hook to detour from hook_at
 	write_memory<DWORD>(hook_at + 1, detour - hook_at - 5);
-	protect_memory<BYTE[5]>(hook_at, old_protection);
+	protect_memory<BYTE[JMP_SIZE]>(hook_at, old_protection);
 
 	DWORD _old_prot;  // make the code cave executable
 	VirtualProtect(post_detour_cave, length + 5, PAGE_EXECUTE_READWRITE, &_old_prot);
@@ -86,7 +89,57 @@ void remove_detour_hook(DWORD hook_at, const BYTE* original, size_t length)
 {
 	DWORD old_protection = protect_memory<BYTE>(hook_at, PAGE_EXECUTE_READWRITE, length);
 
-	memcpy((void*)hook_at, original, length);
+	write_memory<BYTE>(hook_at, original, length);
 
 	protect_memory<BYTE>(hook_at, old_protection, length);
+}
+
+MemoryRegion next_memory_page(DWORD base_adr)
+{
+	MEMORY_BASIC_INFORMATION mem_info;
+	while (VirtualQuery((LPVOID)base_adr, &mem_info, sizeof(mem_info)) != 0) {
+		if (mem_info.AllocationProtect & PAGE_EXECUTE_READWRITE)
+			return MemoryRegion((DWORD)mem_info.BaseAddress, mem_info.RegionSize);
+		base_adr += mem_info.RegionSize;
+	}
+	return MemoryRegion();
+}
+
+MemoryRegion first_memory_page()
+{
+	return next_memory_page(0);
+}
+
+/** Note: Cuphead uses JIT(just in time) compilation, so make sure the desired
+	function has been assembled in memory before running this function. */
+DWORD find_signature(const BYTE signature[], size_t size)
+{
+	MemoryRegion page = first_memory_page();
+	BYTE buffer[BUFFER_SIZE] = {};
+
+	while (page.valid()) {
+		DWORD address = page.base_adr;
+		size_t signature_idx = 0;
+
+		do {
+			size_t buffer_size = min(BUFFER_SIZE, page.end() - address);
+			read_memory<BYTE>(address, buffer, buffer_size);
+
+			for (size_t i = 0; i < buffer_size; ++i) {
+				if (signature[signature_idx] == buffer[i]) {
+					++signature_idx;
+					if (signature_idx == size)
+						return address + i + 1 - size;
+				}
+				else
+					signature_idx = 0;
+			}
+
+			address += buffer_size;
+		} while (address < page.end());
+
+		page = next_memory_page(page.end() + 1);
+	}
+
+	return 0;
 }

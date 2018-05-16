@@ -94,27 +94,27 @@ bool is_function_header(HANDLE proc, BYTE* buf)
 	Note: Cuphead uses JIT (just in time) compilation, so make sure the desired
 	function has been assembled in memory before running this function.
 */
-DWORD find_function(HANDLE proc, const BYTE func_header[], size_t header_size)
+DWORD find_signature(HANDLE proc, const BYTE signature[], size_t size)
 {
 	MemoryRegion page = first_memory_page(proc);
 	BYTE buffer[BUFFER_SIZE] = {};
 
 	while (page.valid()) {
 		DWORD address = page.base_adr;
-		size_t func_header_idx = 0;
+		size_t signature_idx = 0;
 
 		do {
 			size_t buffer_size = min(BUFFER_SIZE, page.end() - address);
 			read_memory<BYTE>(proc, address, buffer, buffer_size);
 
 			for (size_t i = 0; i < buffer_size; ++i) {
-				if (func_header[func_header_idx] == buffer[i]) {
-					++func_header_idx;
-					if (func_header_idx == header_size)
-						return address + i + 1 - header_size;
+				if (signature[signature_idx] == buffer[i]) {
+					++signature_idx;
+					if (signature_idx == size)
+						return address + i + 1 - size;
 				}
 				else
-					func_header_idx = 0;
+					signature_idx = 0;
 			}
 
 			address += buffer_size;

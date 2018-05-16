@@ -129,7 +129,7 @@ DWORD PlayerController::get_player_controller_address()
 		0x74, 0x04
 	};
 	// 1. Find the function where the hook is to be placed based on the function's signature.
-	DWORD original_func_adr = find_function(proc, func_header, sizeof(func_header) / sizeof(BYTE));
+	DWORD original_func_adr = find_signature(proc, func_header, sizeof(func_header) / sizeof(BYTE));
 	if (!original_func_adr) return 0;
 
 	InjectionHelper player_controller_info;
@@ -192,7 +192,7 @@ DWORD PlayerController::get_jump_nop_address()
 		0x0F, 0x85, 0xBC, 0x01, 0x00, 0x00,
 		0x8B, 0x47, 0x38, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00
 	};
-	DWORD adr = find_function(proc, signature, sizeof(signature) / sizeof(BYTE));
+	DWORD adr = find_signature(proc, signature, sizeof(signature) / sizeof(BYTE));
 	std::cout << "INFINITE JUMP HOOK AT ADDRESS: " << std::hex << adr << '\n';
 	return adr;
 }
@@ -205,7 +205,7 @@ DWORD PlayerController::get_inf_dmg_address()
 	static const BYTE signature[] = {
 		0x8B, 0x46, 0x38, 0x83, 0xEC, 0x08, 0x57, 0x50, 0x90, 0x90, 0x90, 0xFF, 0x50, 0x0C, 0x83, 0xC4, 0x10, 0x8B, 0x46, 0x3C
 	};
-	DWORD adr = find_function(proc, signature, sizeof(signature) / sizeof(BYTE));
+	DWORD adr = find_signature(proc, signature, sizeof(signature) / sizeof(BYTE));
 	std::cout << "INFINITE DAMAGE HOOK AT ADDRESS: " << std::hex << adr << '\n';
 	return adr;
 }

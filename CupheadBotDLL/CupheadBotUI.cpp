@@ -32,6 +32,14 @@ void CupheadBotUI::render_ui()
 		bot.wallhack(ui_wallhack_enabled);
 	}
 
+	if (ImGui::Checkbox("Invincible?", &ui_invincibility)) {
+		bot.set_invincible(ui_invincibility);
+	}
+
+	if (ImGui::Button("Max HP")) {
+		bot.set_hp_to_max();
+	}
+
 	if (ImGui::Button("SHOW DEMO WINDOW"))
 		ui_demo_visible = !ui_demo_visible;
 
@@ -57,6 +65,7 @@ void CupheadBotUI::init_ui(ID3D11Device* p_device, ID3D11DeviceContext* p_device
 
 void CupheadBotUI::exit_ui()
 {
+	bot.exit();
 	imgui_initialized = false;
 	unhook_input_handler();
 	ImGui_ImplDX11_Shutdown();
@@ -87,7 +96,6 @@ void CupheadBotUI::hook_input_handler()
 void CupheadBotUI::unhook_input_handler()
 {
 	SetWindowLongPtr(bot.get_cuphead_window_handle(), GWLP_WNDPROC, (LONG_PTR)orig_wndproc);
-	orig_wndproc = nullptr;
 }
 
 
