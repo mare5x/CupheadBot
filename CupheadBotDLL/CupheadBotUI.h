@@ -37,6 +37,9 @@ private:
 	bool ui_invincibility;
 	bool ui_infinite_jumping;
 
+	int ui_primary_weapon_idx;
+	int ui_secondary_weapon_idx;
+
 	// ImGUI flags
 	bool imgui_initialized;
 

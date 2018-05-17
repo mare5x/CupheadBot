@@ -10,19 +10,19 @@ public:
 	void exit();
 
 	// Map hacks
-
 	/** Allows walking through walls on the map/level selection screen. 
 		Note: must be on the level selection screen. */
 	void wallhack(bool enable);
 	
 	// Player controller hacks
-
+	DWORD get_player_controller_address() { return player_controller.get_base_address(); }
 	/* Note: must be in a level. */
 	void set_invincible(bool invincible) { player_controller.set_invincible(invincible); }
 	void set_hp_to_max() { player_controller.set_hp(player_controller.get_max_hp()); }
+	void set_primary_weapon(const PlayerControllerBot::Weapon& weapon) { player_controller.set_primary_weapon(weapon); }
+	void set_secondary_weapon(const PlayerControllerBot::Weapon& weapon) { player_controller.set_secondary_weapon(weapon); }
 
 	// Cuphead manipulation hacks
-
 	void set_infinite_jumping(bool inf_jump);
 
 	HMODULE get_dll_module() const { return dll_module; }

@@ -1,5 +1,18 @@
 #include "PlayerControllerBot.h"
 
+PlayerControllerBot::Weapon w = {
+	"asdf", 1
+};
+
+const std::array<PlayerControllerBot::Weapon, PlayerControllerBot::N_WEAPONS> PlayerControllerBot::WEAPON_TABLE = { {
+	{ "PEASHOOTER", 1456773641 },
+	{ "SPREAD", 1456773649 },
+	{ "CHASER", 1460621839 },
+	{ "LOBBER", 1467024095 },
+	{ "CHARGE", 1466416941 },
+	{ "ROUNDABOUT", 1466518900 }
+} };
+
 // static members are declared in a class and defined here https://stackoverflow.com/questions/1410563/what-is-the-difference-between-a-definition-and-a-declaration
 BasicHookInfo PlayerControllerBot::player_controller_hook = {
 	0,
@@ -40,6 +53,29 @@ void PlayerControllerBot::exit()
 	restore_base_address_hook();
 }
 
+DWORD PlayerControllerBot::get_base_address()
+{
+	if (!original_base_address_func)
+		init();
+	return player_controller_adr;
+}
+
+bool PlayerControllerBot::set_primary_weapon(const Weapon & weapon)
+{
+	if (!primary_weapon_adr)
+		if (!set_loadout_address()) return false;
+	write_memory<DWORD>(primary_weapon_adr, weapon.id);
+	return true;
+}
+
+bool PlayerControllerBot::set_secondary_weapon(const Weapon & weapon)
+{
+	if (!primary_weapon_adr)
+		if (!set_loadout_address()) return false;
+	write_memory<DWORD>(secondary_weapon_adr, weapon.id);
+	return true;
+}
+
 void PlayerControllerBot::set_invincible(bool invincible)
 {
 	if (!original_base_address_func)
@@ -62,6 +98,19 @@ DWORD PlayerControllerBot::get_max_hp()
 		init();
 	if (player_controller_adr)
 		return read_memory<DWORD>(player_controller_adr + 0x5c);
+}
+
+bool PlayerControllerBot::set_loadout_address()
+{
+	if (!original_base_address_func)
+		init();
+	if (player_controller_adr) {
+		DWORD loadout_p = read_memory<DWORD>(player_controller_adr + 0x38);
+		primary_weapon_adr = loadout_p + 0x8;
+		secondary_weapon_adr = loadout_p + 0xC;
+		return true;
+	}
+	return false;
 }
 
 bool PlayerControllerBot::set_base_address_hook()

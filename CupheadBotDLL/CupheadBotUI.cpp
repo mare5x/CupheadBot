@@ -28,6 +28,8 @@ void CupheadBotUI::render_ui()
 	ImGui::Text("BASE CUPHEAD.EXE: %x", bot.get_cuphead_module());
 	ImGui::Text("WNDPROC: %x, HOOKED: %x", orig_wndproc, &CupheadBotUI::input_handler);
 
+	ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
+
 	if (ImGui::Checkbox("Wallhack", &ui_wallhack_enabled)) {
 		bot.wallhack(ui_wallhack_enabled);
 	}
@@ -38,6 +40,39 @@ void CupheadBotUI::render_ui()
 
 	if (ImGui::Button("Max HP")) {
 		bot.set_hp_to_max();
+	}
+
+	const auto& weapon_table = PlayerControllerBot::WEAPON_TABLE;
+	// Begin Combo list, add Selectables (items), highlight the already selected item and update the new selected item
+	if (ImGui::BeginCombo("Primary weapon", weapon_table[ui_primary_weapon_idx].name)) {
+		for (int i = 0; i < weapon_table.size(); ++i) {
+			// tell the Selectable if it was previously selected
+			bool is_selected = (ui_primary_weapon_idx == i);
+			const auto& weapon = weapon_table[i];
+			if (ImGui::Selectable(weapon.name, is_selected)) {
+				ui_primary_weapon_idx = i;
+				bot.set_primary_weapon(weapon);
+			}
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+
+		ImGui::EndCombo();
+	}
+	if (ImGui::BeginCombo("Secondary weapon", weapon_table[ui_secondary_weapon_idx].name)) {
+		for (int i = 0; i < weapon_table.size(); ++i) {
+			// tell the Selectable if it was previously selected
+			bool is_selected = (ui_secondary_weapon_idx == i);
+			const auto& weapon = weapon_table[i];
+			if (ImGui::Selectable(weapon.name, is_selected)) {
+				ui_secondary_weapon_idx = i;
+				bot.set_secondary_weapon(weapon);
+			}
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+
+		ImGui::EndCombo();
 	}
 
 	if (ImGui::Checkbox("Infinite jumping", &ui_infinite_jumping)) {
@@ -101,7 +136,6 @@ void CupheadBotUI::unhook_input_handler()
 {
 	SetWindowLongPtr(bot.get_cuphead_window_handle(), GWLP_WNDPROC, (LONG_PTR)orig_wndproc);
 }
-
 
 bool CupheadBotUI::present_impl(ID3D11Device* device, ID3D11DeviceContext* device_context, IDXGISwapChain* swap_chain)
 {
