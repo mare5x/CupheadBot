@@ -35,6 +35,7 @@ private:
 	bool ui_wallhack_enabled;
 	bool ui_demo_visible;
 	bool ui_invincibility;
+	bool ui_infinite_jumping;
 
 	// ImGUI flags
 	bool imgui_initialized;

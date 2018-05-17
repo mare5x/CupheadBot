@@ -1,7 +1,14 @@
 #pragma once
 #include <Windows.h>
 #include <array>
+#include <vector>
 
+
+struct BasicHookInfo
+{
+	DWORD hook_at;
+	std::vector<BYTE> original_bytes;
+};
 
 struct MemoryRegion {
 	MemoryRegion() : base_adr(0), size(0) {}
@@ -65,6 +72,7 @@ DWORD protect_memory(DWORD hook_at, DWORD protection)
 }
 
 
+/* Writes size bytes of instructions in buffer to address using the PAGE_EXECUTE_READWRITE protection. */
 void write_code_buffer(DWORD address, const BYTE* buffer, size_t size);
 
 
@@ -97,6 +105,10 @@ BYTE* detour_hook(DWORD hook_at, DWORD detour, size_t length);
 
 
 void remove_detour_hook(DWORD hook_at, const BYTE* original, size_t length);
+
+
+/* Write size bytes of NOPs at hook_at. */
+void nop_fill(DWORD hook_at, size_t size);
 
 
 /* Returns the next memory page after base_adr that has the PAGE_EXECUTE_READWRITE permission. */

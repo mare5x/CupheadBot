@@ -1,14 +1,7 @@
 #include "memory_tools.h"
-#include <vector>
 
 
-struct JumpHookInfo
-{
-	DWORD hook_at;
-	std::vector<BYTE> original_bytes;
-};
-
-
+/* Hacks that control Cuphead's stats during a level (eg. HP, invincibilitiy, weapon loadout, ...).*/
 class PlayerControllerBot
 {
 public:
@@ -22,7 +15,7 @@ public:
 	void set_hp(DWORD new_hp);
 	DWORD get_max_hp();
 
-	static JumpHookInfo player_controller_hook;
+	static BasicHookInfo player_controller_hook;
 	static DWORD player_controller_adr;
 	static DWORD original_base_address_func;
 private:

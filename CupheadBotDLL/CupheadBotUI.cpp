@@ -32,12 +32,16 @@ void CupheadBotUI::render_ui()
 		bot.wallhack(ui_wallhack_enabled);
 	}
 
-	if (ImGui::Checkbox("Invincible?", &ui_invincibility)) {
+	if (ImGui::Checkbox("Invincible", &ui_invincibility)) {
 		bot.set_invincible(ui_invincibility);
 	}
 
 	if (ImGui::Button("Max HP")) {
 		bot.set_hp_to_max();
+	}
+
+	if (ImGui::Checkbox("Infinite jumping", &ui_infinite_jumping)) {
+		bot.set_infinite_jumping(ui_infinite_jumping);
 	}
 
 	if (ImGui::Button("SHOW DEMO WINDOW"))

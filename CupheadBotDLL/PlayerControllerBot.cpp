@@ -1,7 +1,7 @@
 #include "PlayerControllerBot.h"
 
 // static members are declared in a class and defined here https://stackoverflow.com/questions/1410563/what-is-the-difference-between-a-definition-and-a-declaration
-JumpHookInfo PlayerControllerBot::player_controller_hook = {
+BasicHookInfo PlayerControllerBot::player_controller_hook = {
 	0,
 	{ 0x8B, 0xC8, 0x39, 0x09, 0x8B, 0x40, 0x60 }
 };

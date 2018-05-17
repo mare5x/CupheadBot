@@ -94,6 +94,17 @@ void remove_detour_hook(DWORD hook_at, const BYTE* original, size_t length)
 	protect_memory<BYTE>(hook_at, old_protection, length);
 }
 
+void nop_fill(DWORD hook_at, size_t size)
+{
+	DWORD old_protection = protect_memory<BYTE>(hook_at, PAGE_EXECUTE_READWRITE, size);
+
+	BYTE* p_memory = (BYTE*)hook_at;
+	for (size_t i = 0; i < size; ++i)
+		p_memory[i] = 0x90;
+
+	protect_memory<BYTE>(hook_at, old_protection, size);
+}
+
 MemoryRegion next_memory_page(DWORD base_adr)
 {
 	MEMORY_BASIC_INFORMATION mem_info;
