@@ -28,7 +28,7 @@ void CupheadBotUI::render_ui()
 	ImGui::Text("BASE CUPHEAD.EXE: %x", bot.get_cuphead_module());
 	ImGui::Text("WNDPROC: %x, HOOKED: %x", orig_wndproc, &CupheadBotUI::input_handler);
 
-	ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
+	//ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
 
 	if (ImGui::Checkbox("Wallhack", &ui_wallhack_enabled)) {
 		bot.wallhack(ui_wallhack_enabled);
@@ -77,6 +77,10 @@ void CupheadBotUI::render_ui()
 
 	if (ImGui::Checkbox("Infinite jumping", &ui_infinite_jumping)) {
 		bot.set_infinite_jumping(ui_infinite_jumping);
+	}
+
+	if (ImGui::Checkbox("One punch man", &ui_infinite_damage)) {
+		bot.set_infinite_damage(ui_infinite_damage);
 	}
 
 	if (ImGui::Button("SHOW DEMO WINDOW"))

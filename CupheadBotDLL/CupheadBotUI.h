@@ -36,6 +36,7 @@ private:
 	bool ui_demo_visible;
 	bool ui_invincibility;
 	bool ui_infinite_jumping;
+	bool ui_infinite_damage;
 
 	int ui_primary_weapon_idx;
 	int ui_secondary_weapon_idx;

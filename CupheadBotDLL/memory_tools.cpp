@@ -1,6 +1,5 @@
 #include "memory_tools.h"
 
-const size_t JMP_SIZE = 5;  // bytes
 const size_t BUFFER_SIZE = 4096;  // bytes
 
 

@@ -4,6 +4,9 @@
 #include <vector>
 
 
+const size_t JMP_SIZE = 5;  // bytes
+
+
 struct BasicHookInfo
 {
 	DWORD hook_at;

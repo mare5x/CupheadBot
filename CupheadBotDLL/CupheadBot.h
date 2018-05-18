@@ -23,18 +23,23 @@ public:
 	void set_secondary_weapon(const PlayerControllerBot::Weapon& weapon) { player_controller.set_secondary_weapon(weapon); }
 
 	// Cuphead manipulation hacks
-	void set_infinite_jumping(bool inf_jump);
+	bool set_infinite_jumping(bool inf_jump);
+	bool set_infinite_damage(bool inf_dmg);
 
 	HMODULE get_dll_module() const { return dll_module; }
 	HMODULE get_cuphead_module() const { return cuphead_module; }
 	HWND get_cuphead_window_handle() const { return cuphead_window_handle; }
+
+	static DWORD original_infinite_damage_func;
 private:
 	DWORD get_infinite_jumping_address();
+	DWORD get_infinite_damage_address();
 
 	PlayerControllerBot player_controller;
 
 	// Hook data
 	BasicHookInfo infinite_jump_info;
+	BasicHookInfo infinite_damage_info;
 
 	// Common handles
 	HMODULE dll_module;
