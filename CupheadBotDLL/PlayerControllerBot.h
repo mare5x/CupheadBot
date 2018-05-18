@@ -19,20 +19,23 @@ public:
 	bool init();
 	void exit();
 
-	DWORD get_base_address();
+	DWORD get_base_address() const { return player_controller_adr; }
 
 	bool set_primary_weapon(const Weapon& weapon);
 	bool set_secondary_weapon(const Weapon& weapon);
 
-	void set_invincible(bool invincible);
+	bool set_invincible(bool invincible);
 
-	void set_hp(DWORD new_hp);
-	DWORD get_max_hp();
+	bool set_hp(DWORD new_hp);
+	DWORD get_max_hp();  // Returns 0 on failure
 
 	static BasicHookInfo player_controller_hook;
 	static DWORD player_controller_adr;
 	static DWORD original_base_address_func;
 private:
+	/* Returns whether PlayerController is initialized and if it isn't it tries to initialize it. */
+	bool initialized_or_init();
+
 	bool set_loadout_address();
 
 	DWORD primary_weapon_adr, secondary_weapon_adr;

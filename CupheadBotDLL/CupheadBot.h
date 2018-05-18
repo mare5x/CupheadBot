@@ -1,3 +1,6 @@
+// TODO update() function to automatically apply scheduled hacks
+
+
 #pragma once
 #include "memory_tools.h"
 #include "PlayerControllerBot.h"
@@ -17,10 +20,10 @@ public:
 	// Player controller hacks
 	DWORD get_player_controller_address() { return player_controller.get_base_address(); }
 	/* Note: must be in a level. */
-	void set_invincible(bool invincible) { player_controller.set_invincible(invincible); }
-	void set_hp_to_max() { player_controller.set_hp(player_controller.get_max_hp()); }
-	void set_primary_weapon(const PlayerControllerBot::Weapon& weapon) { player_controller.set_primary_weapon(weapon); }
-	void set_secondary_weapon(const PlayerControllerBot::Weapon& weapon) { player_controller.set_secondary_weapon(weapon); }
+	bool set_invincible(bool invincible) { return player_controller.set_invincible(invincible); }
+	bool set_hp_to_max() { return player_controller.set_hp(player_controller.get_max_hp()); }
+	bool set_primary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_primary_weapon(weapon); }
+	bool set_secondary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_secondary_weapon(weapon); }
 
 	// Cuphead manipulation hacks
 	bool set_infinite_jumping(bool inf_jump);

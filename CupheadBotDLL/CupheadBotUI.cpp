@@ -28,20 +28,32 @@ void CupheadBotUI::render_ui()
 	ImGui::Text("BASE CUPHEAD.EXE: %x", bot.get_cuphead_module());
 	ImGui::Text("WNDPROC: %x, HOOKED: %x", orig_wndproc, &CupheadBotUI::input_handler);
 
-	//ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
+	ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
 
 	if (ImGui::Checkbox("Wallhack", &ui_wallhack_enabled)) {
 		bot.wallhack(ui_wallhack_enabled);
 	}
 
+	static bool invincible_failed = false;  // the static variable gets initialized only the first time around
 	if (ImGui::Checkbox("Invincible", &ui_invincibility)) {
-		bot.set_invincible(ui_invincibility);
+		if (invincible_failed = !bot.set_invincible(ui_invincibility))
+			ui_invincibility = !ui_invincibility;
+	}
+	if (invincible_failed) {
+		ImGui::SameLine();
+		ImGui::Text("FAILED!");
 	}
 
+	static bool max_hp_failed = false;
 	if (ImGui::Button("Max HP")) {
-		bot.set_hp_to_max();
+		max_hp_failed = !bot.set_hp_to_max();
+	}
+	if (max_hp_failed) {
+		ImGui::SameLine();
+		ImGui::Text("FAILED!");
 	}
 
+	static bool primary_weapon_failed = false;
 	const auto& weapon_table = PlayerControllerBot::WEAPON_TABLE;
 	// Begin Combo list, add Selectables (items), highlight the already selected item and update the new selected item
 	if (ImGui::BeginCombo("Primary weapon", weapon_table[ui_primary_weapon_idx].name)) {
@@ -50,8 +62,8 @@ void CupheadBotUI::render_ui()
 			bool is_selected = (ui_primary_weapon_idx == i);
 			const auto& weapon = weapon_table[i];
 			if (ImGui::Selectable(weapon.name, is_selected)) {
-				ui_primary_weapon_idx = i;
-				bot.set_primary_weapon(weapon);
+				primary_weapon_failed = !bot.set_primary_weapon(weapon);
+				if (!primary_weapon_failed) ui_primary_weapon_idx = i;
 			}
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();
@@ -59,14 +71,20 @@ void CupheadBotUI::render_ui()
 
 		ImGui::EndCombo();
 	}
+	if (primary_weapon_failed) {
+		ImGui::SameLine();
+		ImGui::Text("FAILED!");
+	}
+
+	static bool secondary_weapon_failed = false;
 	if (ImGui::BeginCombo("Secondary weapon", weapon_table[ui_secondary_weapon_idx].name)) {
 		for (int i = 0; i < weapon_table.size(); ++i) {
 			// tell the Selectable if it was previously selected
 			bool is_selected = (ui_secondary_weapon_idx == i);
 			const auto& weapon = weapon_table[i];
 			if (ImGui::Selectable(weapon.name, is_selected)) {
-				ui_secondary_weapon_idx = i;
-				bot.set_secondary_weapon(weapon);
+				secondary_weapon_failed = !bot.set_secondary_weapon(weapon);
+				if (!secondary_weapon_failed) ui_secondary_weapon_idx = i;
 			}
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();
@@ -74,13 +92,29 @@ void CupheadBotUI::render_ui()
 
 		ImGui::EndCombo();
 	}
-
-	if (ImGui::Checkbox("Infinite jumping", &ui_infinite_jumping)) {
-		bot.set_infinite_jumping(ui_infinite_jumping);
+	if (secondary_weapon_failed) {
+		ImGui::SameLine();
+		ImGui::Text("FAILED!");
 	}
 
+	static bool inf_jump_failed = false;
+	if (ImGui::Checkbox("Infinite jumping", &ui_infinite_jumping)) {
+		if (inf_jump_failed = !bot.set_infinite_jumping(ui_infinite_jumping))
+			ui_infinite_jumping = !ui_infinite_jumping;
+	}
+	if (inf_jump_failed) {
+		ImGui::SameLine();
+		ImGui::Text("FAILED!");
+	}
+
+	static bool inf_dmg_failed = false;
 	if (ImGui::Checkbox("One punch man", &ui_infinite_damage)) {
-		bot.set_infinite_damage(ui_infinite_damage);
+		if (inf_dmg_failed = !bot.set_infinite_damage(ui_infinite_damage))
+			ui_infinite_damage = !ui_infinite_damage;
+	}
+	if (inf_dmg_failed) {
+		ImGui::SameLine();
+		ImGui::Text("FAILED!");
 	}
 
 	if (ImGui::Button("SHOW DEMO WINDOW"))
