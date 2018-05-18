@@ -30,6 +30,8 @@ public:
 	bool is_exit_scheduled() const { return exit_scheduled; }
 	bool is_imgui_initialized() const { return imgui_initialized; }
 private:
+	void render_diagnostics();
+
 	// UI flags
 	bool ui_visible;
 	bool ui_wallhack_enabled;

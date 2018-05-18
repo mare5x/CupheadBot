@@ -8,14 +8,14 @@
 #include "d3d11_hook.h"
 
 
-d3d11_PresentHook p_post_present_hook = nullptr;
+d3d11_Present d3d11_hook::g_p_present = nullptr;;
+
+d3d11_Present p_post_present_hook = nullptr;
 d3d11_present_impl p_present_impl = nullptr;
 
 IDXGISwapChain* d3d11_hook::g_p_swapchain;
 ID3D11Device*d3d11_hook:: g_p_device;
 ID3D11DeviceContext* d3d11_hook::g_p_device_context;
-
-DWORD g_p_present;
 
 BYTE* post_detour_cave = nullptr;
 
@@ -23,6 +23,7 @@ BYTE* post_detour_cave = nullptr;
 HRESULT __stdcall d3d11_hook::present_callback(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
 	// this function's declaration/signature must be identical to the original Present function's signature
+	g_p_swapchain = pSwapChain;
 	pSwapChain->GetDevice(__uuidof(g_p_device), (void**)&g_p_device);
 	g_p_device->GetImmediateContext(&g_p_device_context);
 
@@ -33,7 +34,7 @@ HRESULT __stdcall d3d11_hook::present_callback(IDXGISwapChain* pSwapChain, UINT 
 		// Instead of calling Present() it would be better to jump to it, because now Present returns its value to this function
 		// and this function returns the value to the function that called Present initially
 		unhook_d3d11();
-		return ((d3d11_PresentHook)(g_p_present))(pSwapChain, SyncInterval, Flags);
+		return g_p_present(pSwapChain, SyncInterval, Flags);
 	}
 
 	// return to the original Present function using the 'original' parameters, by first going to the 
@@ -70,13 +71,13 @@ void d3d11_hook::hook_d3d11(d3d11_present_impl cb)
 	// dummy device/swapchain to get the address of the present function used by the d3d11 program's swapchain
 	// the Present function is used to render content to the display, so it is called every frame by every program
 	// that uses d3d11
-	g_p_present = get_VF((DWORD)p_swapchain, 8);
+	g_p_present = (d3d11_Present)get_VF((DWORD)p_swapchain, 8);
 
 	// with the address of the Present function, we can apply a detour hook so that the Present function will
 	// immediately jump to our present_callback function. From there we jump to the post_detour code cave which contains
 	// the original code replaced by the jump/detour hook and then from there we jump back to the original Present function
-	post_detour_cave = detour_hook(g_p_present, (DWORD)&present_callback, 5);
-	p_post_present_hook = (d3d11_PresentHook)post_detour_cave;
+	post_detour_cave = detour_hook((DWORD)g_p_present, (DWORD)&present_callback, 5);
+	p_post_present_hook = (d3d11_Present)post_detour_cave;
 
 	// the dummy device, swapchain ... isn't necessary anymore -> we only needed to get the address of the Present function
 	p_device->Release();
@@ -89,7 +90,7 @@ void d3d11_hook::hook_d3d11(d3d11_present_impl cb)
 void d3d11_hook::unhook_d3d11()
 {
 	// restore the Present detour hook by writing the original code back to its original place in the Present function
-	remove_detour_hook(g_p_present, post_detour_cave, 5);
+	remove_detour_hook((DWORD)g_p_present, post_detour_cave, 5);
 	if (post_detour_cave)
 		delete[] post_detour_cave;
 }

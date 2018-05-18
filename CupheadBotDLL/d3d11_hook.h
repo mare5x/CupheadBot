@@ -2,7 +2,7 @@
 #include <d3d11.h>
 
 // function pointer typedef for the Present() function in D3D
-typedef HRESULT(__stdcall *d3d11_PresentHook)(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
+typedef HRESULT(__stdcall *d3d11_Present)(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
 // function pointer typedef for custom Present() function called by the hook
 typedef bool (*d3d11_present_impl)(ID3D11Device* device, ID3D11DeviceContext* device_context, IDXGISwapChain* swap_chain);
 
@@ -11,6 +11,7 @@ namespace d3d11_hook {
 	extern IDXGISwapChain* g_p_swapchain;
 	extern ID3D11Device* g_p_device;
 	extern ID3D11DeviceContext* g_p_device_context;
+	extern d3d11_Present g_p_present;
 
 	/* A dummy window used to create a D3D device and swapchain. */
 	// Based of hacklib's D3DDeviceFetcher.cpp

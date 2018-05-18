@@ -24,11 +24,8 @@ void CupheadBotUI::render_ui()
 {
 	ImGui::Begin("CupheadBot", &ui_visible);
 
-	ImGui::Text("BASE DLL: %x", bot.get_dll_module());
-	ImGui::Text("BASE CUPHEAD.EXE: %x", bot.get_cuphead_module());
-	ImGui::Text("WNDPROC: %x, HOOKED: %x", orig_wndproc, &CupheadBotUI::input_handler);
-
-	ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
+	if (ImGui::CollapsingHeader("Diagnostics"))
+		render_diagnostics();
 
 	if (ImGui::Checkbox("Wallhack", &ui_wallhack_enabled)) {
 		bot.wallhack(ui_wallhack_enabled);
@@ -173,6 +170,24 @@ void CupheadBotUI::hook_input_handler()
 void CupheadBotUI::unhook_input_handler()
 {
 	SetWindowLongPtr(bot.get_cuphead_window_handle(), GWLP_WNDPROC, (LONG_PTR)orig_wndproc);
+}
+
+void CupheadBotUI::render_diagnostics()
+{
+	ImGui::Text("Base CupheadBot.dll: %x", bot.get_dll_module());
+	ImGui::Text("Base Cuphead.exe: %x", bot.get_cuphead_module());
+	ImGui::Text("Original WNDPROC: %x, hooked input_handler: %x", orig_wndproc, &CupheadBotUI::input_handler);
+
+	ImGui::Text("d3d11_hook::g_p_present: %x", d3d11_hook::g_p_present);
+	ImGui::Text("present_impl: %x", &CupheadBotUI::present_impl);
+	ImGui::Text("d3d11_hook::g_p_swapchain: %x", d3d11_hook::g_p_swapchain);
+	ImGui::Text("d3d11_hook::g_p_device: %x", d3d11_hook::g_p_device);
+	ImGui::Text("d3d11_hook::g_p_device_context: %x", d3d11_hook::g_p_device_context);
+	
+	ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
+
+	ImGui::Text("Infinite jump hook_at: %x", bot.get_infinite_jump_info().hook_at);
+	ImGui::Text("Infinite damage hook_at: %x", bot.get_infinite_damage_info().hook_at);
 }
 
 bool CupheadBotUI::present_impl(ID3D11Device* device, ID3D11DeviceContext* device_context, IDXGISwapChain* swap_chain)

@@ -33,6 +33,9 @@ public:
 	HMODULE get_cuphead_module() const { return cuphead_module; }
 	HWND get_cuphead_window_handle() const { return cuphead_window_handle; }
 
+	const BasicHookInfo get_infinite_damage_info() const { return infinite_damage_info; }
+	const BasicHookInfo get_infinite_jump_info() const { return infinite_jump_info; }
+
 	static DWORD original_infinite_damage_func;
 private:
 	DWORD get_infinite_jumping_address();
