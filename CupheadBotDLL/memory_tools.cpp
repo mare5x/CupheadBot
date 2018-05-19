@@ -104,27 +104,27 @@ void nop_fill(DWORD hook_at, size_t size)
 	protect_memory<BYTE>(hook_at, old_protection, size);
 }
 
-MemoryRegion next_memory_page(DWORD base_adr)
+MemoryRegion next_memory_page(DWORD base_adr, DWORD protection)
 {
 	MEMORY_BASIC_INFORMATION mem_info;
 	while (VirtualQuery((LPVOID)base_adr, &mem_info, sizeof(mem_info)) != 0) {
-		if (mem_info.AllocationProtect & PAGE_EXECUTE_READWRITE)
+		if ((mem_info.State & MEM_COMMIT) && (mem_info.Protect & protection))
 			return MemoryRegion((DWORD)mem_info.BaseAddress, mem_info.RegionSize);
 		base_adr += mem_info.RegionSize;
 	}
 	return MemoryRegion();
 }
 
-MemoryRegion first_memory_page()
+MemoryRegion first_memory_page(DWORD protection)
 {
-	return next_memory_page(0);
+	return next_memory_page(0, protection);
 }
 
 /** Note: Cuphead uses JIT(just in time) compilation, so make sure the desired
 	function has been assembled in memory before running this function. */
-DWORD find_signature(const BYTE signature[], size_t size)
+DWORD find_signature(const BYTE signature[], size_t size, DWORD protection)
 {
-	MemoryRegion page = first_memory_page();
+	MemoryRegion page = first_memory_page(protection);
 	BYTE buffer[BUFFER_SIZE] = {};
 
 	while (page.valid()) {
@@ -148,7 +148,7 @@ DWORD find_signature(const BYTE signature[], size_t size)
 			address += buffer_size;
 		} while (address < page.end());
 
-		page = next_memory_page(page.end() + 1);
+		page = next_memory_page(page.end() + 1, protection);
 	}
 
 	return 0;

@@ -2,6 +2,7 @@
 
 
 DWORD CupheadBot::original_infinite_damage_func = 0;
+DWORD CupheadBot::money_function_adr = 0;
 
 
 CupheadBot::CupheadBot(HMODULE dll_handle)
@@ -29,6 +30,22 @@ void CupheadBot::wallhack(bool enable)
 	ptr_chain = read_memory<DWORD>(ptr_chain + 4);
 	ptr_chain = read_memory<DWORD>(ptr_chain + 0x44);
 	write_memory<DWORD>(ptr_chain, enable ? 1 : 2);
+}
+
+DWORD CupheadBot::get_money()
+{
+	if (DWORD adr = get_money_address())
+		return read_memory<DWORD>(adr);
+	return 0;
+}
+
+bool CupheadBot::set_money(DWORD money)
+{
+	if (DWORD adr = get_money_address()) {
+		write_memory<DWORD>(adr, money);
+		return true;
+	}
+	return false;
 }
 
 bool CupheadBot::set_infinite_jumping(bool inf_jump)
@@ -93,4 +110,26 @@ DWORD CupheadBot::get_infinite_damage_address()
 		0x8B, 0x46, 0x38, 0x83, 0xEC, 0x08, 0x57, 0x50, 0x90, 0x90, 0x90, 0xFF, 0x50, 0x0C, 0x83, 0xC4, 0x10, 0x8B, 0x46, 0x3C
 	};
 	return find_signature(signature, sizeof(signature));
+}
+
+DWORD CupheadBot::get_money_address()
+{
+	static const BYTE signature[] = {
+		0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x08, 0xE8, 0x2D, 0x00, 0x00, 0x00, 0x83, 0xEC, 0x0C, 0x50, 0xE8, 0x4C, 0x00, 0x00, 0x00, 0x83, 0xC4, 0x10, 0xC9, 0xC3
+	};
+	if (!money_function_adr) {
+		money_function_adr = find_signature(signature, sizeof(signature));
+		if (!money_function_adr) return 0;
+	}
+	// Call a function that returns the correct address to the start of the money address pointer chain.
+	// The start of the pointer chain depends on the currently loaded save file, but with this there aren't any problems.
+	DWORD adr = 0;
+	__asm {
+		CALL [money_function_adr]
+		mov adr, eax
+	}
+
+	adr = read_memory<DWORD>(adr + 0xc);
+	adr = read_memory<DWORD>(adr + 0x8);
+	return adr + 0x14;
 }

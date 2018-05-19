@@ -31,6 +31,7 @@ public:
 	bool is_imgui_initialized() const { return imgui_initialized; }
 private:
 	void render_diagnostics();
+	void show_error_tooltip(bool error);
 
 	// UI flags
 	bool ui_visible;
@@ -42,6 +43,7 @@ private:
 
 	int ui_primary_weapon_idx;
 	int ui_secondary_weapon_idx;
+	int ui_money;
 
 	// ImGUI flags
 	bool imgui_initialized;

@@ -18,6 +18,8 @@ CupheadBotUI::CupheadBotUI(HMODULE dll_handle)
 
 	d3d11_hook::hook_d3d11(&CupheadBotUI::present_impl);
 	init_ui(d3d11_hook::g_p_device, d3d11_hook::g_p_device_context);
+
+	ui_money = bot.get_money();
 }
 
 void CupheadBotUI::render_ui()
@@ -31,24 +33,31 @@ void CupheadBotUI::render_ui()
 		bot.wallhack(ui_wallhack_enabled);
 	}
 
+	static bool set_money_failed = false;
+	if (ImGui::InputInt("Money", &ui_money, 1, 5)) {
+		set_money_failed = !bot.set_money(ui_money);
+	}
+	show_error_tooltip(set_money_failed);
+
+	ImGui::SameLine(); ImGui::TextDisabled("(?)");
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Current money: %d", bot.get_money());
+		ImGui::EndTooltip();
+	}
+
 	static bool invincible_failed = false;  // the static variable gets initialized only the first time around
 	if (ImGui::Checkbox("Invincible", &ui_invincibility)) {
 		if (invincible_failed = !bot.set_invincible(ui_invincibility))
 			ui_invincibility = !ui_invincibility;
 	}
-	if (invincible_failed) {
-		ImGui::SameLine();
-		ImGui::Text("FAILED!");
-	}
+	show_error_tooltip(invincible_failed);
 
 	static bool max_hp_failed = false;
 	if (ImGui::Button("Max HP")) {
 		max_hp_failed = !bot.set_hp_to_max();
 	}
-	if (max_hp_failed) {
-		ImGui::SameLine();
-		ImGui::Text("FAILED!");
-	}
+	show_error_tooltip(max_hp_failed);
 
 	static bool primary_weapon_failed = false;
 	const auto& weapon_table = PlayerControllerBot::WEAPON_TABLE;
@@ -68,10 +77,7 @@ void CupheadBotUI::render_ui()
 
 		ImGui::EndCombo();
 	}
-	if (primary_weapon_failed) {
-		ImGui::SameLine();
-		ImGui::Text("FAILED!");
-	}
+	show_error_tooltip(primary_weapon_failed);
 
 	static bool secondary_weapon_failed = false;
 	if (ImGui::BeginCombo("Secondary weapon", weapon_table[ui_secondary_weapon_idx].name)) {
@@ -89,30 +95,21 @@ void CupheadBotUI::render_ui()
 
 		ImGui::EndCombo();
 	}
-	if (secondary_weapon_failed) {
-		ImGui::SameLine();
-		ImGui::Text("FAILED!");
-	}
+	show_error_tooltip(secondary_weapon_failed);
 
 	static bool inf_jump_failed = false;
 	if (ImGui::Checkbox("Infinite jumping", &ui_infinite_jumping)) {
 		if (inf_jump_failed = !bot.set_infinite_jumping(ui_infinite_jumping))
 			ui_infinite_jumping = !ui_infinite_jumping;
 	}
-	if (inf_jump_failed) {
-		ImGui::SameLine();
-		ImGui::Text("FAILED!");
-	}
+	show_error_tooltip(inf_jump_failed);
 
 	static bool inf_dmg_failed = false;
 	if (ImGui::Checkbox("One punch man", &ui_infinite_damage)) {
 		if (inf_dmg_failed = !bot.set_infinite_damage(ui_infinite_damage))
 			ui_infinite_damage = !ui_infinite_damage;
 	}
-	if (inf_dmg_failed) {
-		ImGui::SameLine();
-		ImGui::Text("FAILED!");
-	}
+	show_error_tooltip(inf_dmg_failed);
 
 	if (ImGui::Button("SHOW DEMO WINDOW"))
 		ui_demo_visible = !ui_demo_visible;
@@ -188,6 +185,20 @@ void CupheadBotUI::render_diagnostics()
 
 	ImGui::Text("Infinite jump hook_at: %x", bot.get_infinite_jump_info().hook_at);
 	ImGui::Text("Infinite damage hook_at: %x", bot.get_infinite_damage_info().hook_at);
+}
+
+void CupheadBotUI::show_error_tooltip(bool error)
+{
+	if (!error) return;
+
+	//static const ImVec4 success_color = { 0.0f, 1.0f, 0.0f, 1.0f };
+	static const ImVec4 failed_color = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::TextColored(failed_color, "ERROR!");
+		ImGui::EndTooltip();
+	}
 }
 
 bool CupheadBotUI::present_impl(ID3D11Device* device, ID3D11DeviceContext* device_context, IDXGISwapChain* swap_chain)

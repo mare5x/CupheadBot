@@ -114,12 +114,12 @@ void remove_detour_hook(DWORD hook_at, const BYTE* original, size_t length);
 void nop_fill(DWORD hook_at, size_t size);
 
 
-/* Returns the next memory page after base_adr that has the PAGE_EXECUTE_READWRITE permission. */
-MemoryRegion next_memory_page(DWORD base_adr);
+/* Returns the next memory page after base_adr that has the given permissions (default = PAGE_EXECUTE_READWRITE). */
+MemoryRegion next_memory_page(DWORD base_adr, DWORD protection = PAGE_EXECUTE_READWRITE);
 
 
-MemoryRegion first_memory_page();
+MemoryRegion first_memory_page(DWORD protection = PAGE_EXECUTE_READWRITE);
 
 
-/* Returns the base address of the first matched signature or 0 if it doesn't exist. */
-DWORD find_signature(const BYTE signature[], size_t size);
+/* Returns the base address of the first matched signature in a memory page with the given protection, or 0 if it doesn't exist. */
+DWORD find_signature(const BYTE signature[], size_t size, DWORD protection = PAGE_EXECUTE_READWRITE);

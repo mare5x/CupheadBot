@@ -16,6 +16,8 @@ public:
 	/** Allows walking through walls on the map/level selection screen. 
 		Note: must be on the level selection screen. */
 	void wallhack(bool enable);
+	DWORD get_money();
+	bool set_money(DWORD money);
 	
 	// Player controller hacks
 	DWORD get_player_controller_address() { return player_controller.get_base_address(); }
@@ -40,12 +42,14 @@ public:
 private:
 	DWORD get_infinite_jumping_address();
 	DWORD get_infinite_damage_address();
+	DWORD get_money_address();
 
 	PlayerControllerBot player_controller;
 
 	// Hook data
 	BasicHookInfo infinite_jump_info;
 	BasicHookInfo infinite_damage_info;
+	static DWORD money_function_adr;
 
 	// Common handles
 	HMODULE dll_module;
