@@ -185,6 +185,9 @@ void CupheadBotUI::render_diagnostics()
 
 	ImGui::Text("Infinite jump hook_at: %x", bot.get_infinite_jump_info().hook_at);
 	ImGui::Text("Infinite damage hook_at: %x", bot.get_infinite_damage_info().hook_at);
+	ImGui::Text("Infinite parry hook_at: %x", bot.get_infinite_parry_info().hook_at);
+	
+	ImGui::Text("Invincible address hook_at: %x", bot.get_invincible_adr());
 }
 
 void CupheadBotUI::show_error_tooltip(bool error)

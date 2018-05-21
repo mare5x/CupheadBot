@@ -24,6 +24,7 @@ public:
 	bool set_primary_weapon(const Weapon& weapon);
 	bool set_secondary_weapon(const Weapon& weapon);
 
+	/* Setting this flag makes you unable to user super and parry. Use CupheadBot.set_invincible instead. */
 	bool set_invincible(bool invincible);
 
 	bool set_hp(DWORD new_hp);
