@@ -29,6 +29,7 @@ public:
 
 	// Cuphead manipulation hacks
 	bool set_infinite_jumping(bool inf_jump);
+	bool set_infinite_dashing(bool inf_dash);
 	bool set_infinite_damage(bool inf_dmg);
 
 	bool set_invincible(bool invincible);
@@ -42,6 +43,7 @@ public:
 	const BasicHookInfo get_infinite_parry_info() const { return infinite_parry_info; }
 	DWORD get_invincible_adr() const { return invincible_adr; }
 	DWORD get_money_function_adr() const { return money_function_adr; }
+	DWORD get_infinite_dash_adr() const { return infinite_dash_adr; }
 
 	static DWORD original_infinite_damage_func;
 private:
@@ -49,6 +51,7 @@ private:
 
 	DWORD get_infinite_jumping_address();
 	DWORD get_infinite_parry_address();
+	DWORD get_infinite_dash_address();
 	DWORD get_infinite_damage_address();
 	DWORD get_money_address();
 	DWORD get_invincible_address();
@@ -60,6 +63,7 @@ private:
 	BasicHookInfo infinite_damage_info;
 	static DWORD money_function_adr;
 	DWORD invincible_adr;
+	DWORD infinite_dash_adr;
 
 	// Common handles
 	HMODULE dll_module;

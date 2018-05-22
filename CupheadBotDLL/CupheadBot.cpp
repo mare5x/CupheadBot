@@ -21,6 +21,7 @@ CupheadBot::CupheadBot(HMODULE dll_handle)
 void CupheadBot::exit()
 {
 	set_infinite_jumping(false);
+	set_infinite_dashing(false);
 	set_infinite_damage(false);
 	set_invincible(false);
 	player_controller.exit();
@@ -69,6 +70,31 @@ bool CupheadBot::set_infinite_jumping(bool inf_jump)
 	return set_infinite_parry(inf_jump);
 }
 
+bool CupheadBot::set_infinite_dashing(bool inf_dash)
+{
+	if (!infinite_dash_adr) {
+		infinite_dash_adr = get_infinite_dash_address();
+		if (!infinite_dash_adr)
+			return false;
+	}
+	
+	// values: 0 (not dashing), 1 (dash started), 2 (currently dashing), 4 (dash finished)
+	// normally the process goes from: 1 -> 2 -> 4 -> 0 (0 is set once cuphead hits the ground)
+	// now it goes:					   1 -> 2 -> 0
+	
+	// Change this instruction in the function that gets called when dashing is complete
+	// C7 40 08 04000000 - mov[eax + 08], 00000004
+	//          ^^
+	// change only the 3-rd byte
+	if (inf_dash) {
+		write_memory<BYTE>(infinite_dash_adr + 3, 0);
+	}
+	else {
+		write_memory<BYTE>(infinite_dash_adr + 3, 4);
+	}
+	return true;
+}
+
 /* Trampoline function that sets the projectile damage to infinity (9999) and jumps back to the original code. */
 void __declspec(naked) infinite_damage_setter()
 {
@@ -97,7 +123,8 @@ bool CupheadBot::set_infinite_damage(bool inf_dmg)
 	return true;
 }
 
-/* Note: the player must receive damage for the code to get JITted. */
+/** Ignores damage.
+	Note: the player must receive damage for the code to get JITted. */
 bool CupheadBot::set_invincible(bool invincible)
 {
 	if (!invincible_adr) {
@@ -147,6 +174,14 @@ DWORD CupheadBot::get_infinite_parry_address()
 	static const BYTE signature[] = {
 		0x8B, 0x47, 0x58, 0xC7, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x4C, 0xC7, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00, 
 		0x8B, 0x47, 0x48, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00, 0xE8
+	};
+	return find_signature(signature, sizeof(signature));
+}
+
+DWORD CupheadBot::get_infinite_dash_address()
+{
+	static const BYTE signature[] = {
+		0xC7, 0x40, 0x08, 0x04, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x48, 0xD9, 0xEE, 0xD9, 0x58, 0x10, 0x8B, 0x47, 0x40, 0xD9, 0xEE, 0xD9, 0x58, 0x1C, 0x8B, 0x47, 0x7C
 	};
 	return find_signature(signature, sizeof(signature));
 }

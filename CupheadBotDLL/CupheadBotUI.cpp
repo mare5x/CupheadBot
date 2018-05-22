@@ -98,11 +98,23 @@ void CupheadBotUI::render_ui()
 	show_error_tooltip(secondary_weapon_failed);
 
 	static bool inf_jump_failed = false;
+	static bool inf_dashing_failed = false;
 	if (ImGui::Checkbox("Infinite jumping", &ui_infinite_jumping)) {
 		if (inf_jump_failed = !bot.set_infinite_jumping(ui_infinite_jumping))
 			ui_infinite_jumping = !ui_infinite_jumping;
+		else {
+			ui_infinite_dashing = ui_infinite_jumping;
+			if (inf_dashing_failed = !bot.set_infinite_dashing(ui_infinite_dashing))
+				ui_infinite_dashing = !ui_infinite_dashing;
+		}
 	}
 	show_error_tooltip(inf_jump_failed);
+
+	if (ImGui::Checkbox("Infinite dashing", &ui_infinite_dashing)) {
+		if (inf_dashing_failed = !bot.set_infinite_dashing(ui_infinite_dashing))
+			ui_infinite_dashing = !ui_infinite_dashing;
+	}
+	show_error_tooltip(inf_dashing_failed);
 
 	static bool inf_dmg_failed = false;
 	if (ImGui::Checkbox("One punch man", &ui_infinite_damage)) {
@@ -184,8 +196,9 @@ void CupheadBotUI::render_diagnostics()
 	ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
 
 	ImGui::Text("Infinite jump hook_at: %x", bot.get_infinite_jump_info().hook_at);
-	ImGui::Text("Infinite damage hook_at: %x", bot.get_infinite_damage_info().hook_at);
 	ImGui::Text("Infinite parry hook_at: %x", bot.get_infinite_parry_info().hook_at);
+	ImGui::Text("Infinite dash hook_at: %x", bot.get_infinite_dash_adr());
+	ImGui::Text("Infinite damage hook_at: %x", bot.get_infinite_damage_info().hook_at);
 	
 	ImGui::Text("Invincible address hook_at: %x", bot.get_invincible_adr());
 }
