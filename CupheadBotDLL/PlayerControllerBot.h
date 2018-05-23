@@ -5,6 +5,8 @@
 class PlayerControllerBot
 {
 public:
+	static const float DEFAULT_SUPER_COST;
+
 	static const size_t N_WEAPONS = 6;
 	struct Weapon 
 	{
@@ -29,6 +31,10 @@ public:
 
 	bool set_hp(DWORD new_hp);
 	DWORD get_max_hp();  // Returns 0 on failure
+
+	bool set_super_cost(float new_cost);
+	bool set_super_meter(float val);
+	float get_max_super();
 
 	static BasicHookInfo player_controller_hook;
 	static DWORD player_controller_adr;

@@ -1,8 +1,7 @@
 #include "PlayerControllerBot.h"
 
-PlayerControllerBot::Weapon w = {
-	"asdf", 1
-};
+
+const float PlayerControllerBot::DEFAULT_SUPER_COST = 10.0f;
 
 const std::array<PlayerControllerBot::Weapon, PlayerControllerBot::N_WEAPONS> PlayerControllerBot::WEAPON_TABLE = { {
 	{ "PEASHOOTER", 1456773641 },
@@ -87,6 +86,26 @@ DWORD PlayerControllerBot::get_max_hp()
 {
 	if (!initialized_or_init()) return 0;
 	return read_memory<DWORD>(player_controller_adr + 0x5c);
+}
+
+bool PlayerControllerBot::set_super_cost(float new_cost)
+{
+	if (!initialized_or_init()) return false;
+	write_memory<float>(player_controller_adr + 0x70, new_cost);
+	return true;
+}
+
+bool PlayerControllerBot::set_super_meter(float val)
+{
+	if (!initialized_or_init()) return false;
+	write_memory<float>(player_controller_adr + 0x68, val);
+	return true;
+}
+
+float PlayerControllerBot::get_max_super()
+{
+	if (!initialized_or_init()) return 0;
+	return read_memory<float>(player_controller_adr + 0x64);
 }
 
 bool PlayerControllerBot::initialized_or_init()

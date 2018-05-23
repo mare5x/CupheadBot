@@ -3,6 +3,7 @@
 
 DWORD CupheadBot::original_infinite_damage_func = 0;
 DWORD CupheadBot::money_function_adr = 0;
+DWORD CupheadBot::ui_super_meter_update_adr = 0;
 
 
 CupheadBot::CupheadBot(HMODULE dll_handle)
@@ -51,11 +52,44 @@ bool CupheadBot::set_money(DWORD money)
 	return false;
 }
 
+bool CupheadBot::update_super_meter_ui()
+{
+	static const BYTE signature[] = {
+		0x55, 0x8B, 0xEC, 0x56, 0x83, 0xEC, 0x14, 0x8B, 0x75, 0x08, 0xD9, 0x46, 0x68, 0xD9, 0x5D, 0xF8, 0xD9, 0x45, 0xF8, 0xD9, 0xEE, 0xD9, 0x46, 0x64, 0xD9, 0x5D, 0xF8, 0xD9, 0x45, 0xF8
+	};
+	if (!ui_super_meter_update_adr) {
+		ui_super_meter_update_adr = find_signature(signature, sizeof(signature));
+		if (!ui_super_meter_update_adr)
+			return false;
+	}
+	DWORD pc = get_player_controller_address();
+	__asm {
+		sub esp, 0x8
+		push 1
+		push [pc]
+		call [ui_super_meter_update_adr]
+		add esp, 0x10
+	}
+	return true;
+}
+
+bool CupheadBot::set_super_meter_to_max()
+{
+	if (player_controller.set_super_meter(1000.0f)) // the game automatically bound checks anyways ...
+		return update_super_meter_ui();
+	return false;
+}
+
 bool CupheadBot::set_infinite_jumping(bool inf_jump)
 {
+	static const BYTE signature[] = {
+		0x0F, 0x85, 0xBC, 0x01, 0x00, 0x00,
+		0x8B, 0x47, 0x38, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00
+	};
+
 	// get address to NOP
 	if (!infinite_jump_info.hook_at) {
-		infinite_jump_info.hook_at = get_infinite_jumping_address();
+		infinite_jump_info.hook_at = find_signature(signature, sizeof(signature));
 		if (!infinite_jump_info.hook_at)
 			return false;
 	}
@@ -72,8 +106,12 @@ bool CupheadBot::set_infinite_jumping(bool inf_jump)
 
 bool CupheadBot::set_infinite_dashing(bool inf_dash)
 {
+	static const BYTE signature[] = {
+		0xC7, 0x40, 0x08, 0x04, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x48, 0xD9, 0xEE, 0xD9, 0x58, 0x10, 0x8B, 0x47, 0x40, 0xD9, 0xEE, 0xD9, 0x58, 0x1C, 0x8B, 0x47, 0x7C
+	};
+
 	if (!infinite_dash_adr) {
-		infinite_dash_adr = get_infinite_dash_address();
+		infinite_dash_adr = find_signature(signature, sizeof(signature));
 		if (!infinite_dash_adr)
 			return false;
 	}
@@ -108,8 +146,12 @@ void __declspec(naked) infinite_damage_setter()
 
 bool CupheadBot::set_infinite_damage(bool inf_dmg)
 {
+	static const BYTE signature[] = {
+		0x8B, 0x46, 0x38, 0x83, 0xEC, 0x08, 0x57, 0x50, 0x90, 0x90, 0x90, 0xFF, 0x50, 0x0C, 0x83, 0xC4, 0x10, 0x8B, 0x46, 0x3C
+	};
+	
 	if (!infinite_damage_info.hook_at) {
-		infinite_damage_info.hook_at = get_infinite_damage_address();
+		infinite_damage_info.hook_at = find_signature(signature, sizeof(signature));
 		if (!infinite_damage_info.hook_at)
 			return false;
 	}
@@ -127,8 +169,12 @@ bool CupheadBot::set_infinite_damage(bool inf_dmg)
 	Note: the player must receive damage for the code to get JITted. */
 bool CupheadBot::set_invincible(bool invincible)
 {
+	static const BYTE signature[] = {
+		0x0F, 0x85, 0xE5, 0x00, 0x00, 0x00, 0x39, 0x3F, 0xD9, 0x47, 0x08, 0xD9, 0x5D, 0xF0, 0xD9, 0x45, 0xF0, 0xD9, 0xEE, 0xDF, 0xF1
+	};
+
 	if (!invincible_adr) {
-		invincible_adr = get_invincible_address();
+		invincible_adr = find_signature(signature, sizeof(signature));
 		if (!invincible_adr)
 			return false;
 	}
@@ -145,8 +191,13 @@ bool CupheadBot::set_invincible(bool invincible)
 
 bool CupheadBot::set_infinite_parry(bool inf_parry)
 {
+	static const BYTE signature[] = {
+		0x8B, 0x47, 0x58, 0xC7, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x4C, 0xC7, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00,
+		0x8B, 0x47, 0x48, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00, 0xE8
+	};
+	
 	if (!infinite_parry_info.hook_at) {
-		infinite_parry_info.hook_at = get_infinite_parry_address();
+		infinite_parry_info.hook_at = find_signature(signature, sizeof(signature));
 		if (!infinite_parry_info.hook_at)
 			return false;
 	}
@@ -158,40 +209,6 @@ bool CupheadBot::set_infinite_parry(bool inf_parry)
 		write_code_buffer(infinite_parry_info.hook_at, infinite_parry_info.original_bytes.data(), infinite_parry_info.original_bytes.size());
 	}
 	return true;
-}
-
-DWORD CupheadBot::get_infinite_jumping_address()
-{
-	static const BYTE signature[] = {
-		0x0F, 0x85, 0xBC, 0x01, 0x00, 0x00,
-		0x8B, 0x47, 0x38, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00
-	};
-	return find_signature(signature, sizeof(signature));
-}
-
-DWORD CupheadBot::get_infinite_parry_address()
-{
-	static const BYTE signature[] = {
-		0x8B, 0x47, 0x58, 0xC7, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x4C, 0xC7, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00, 
-		0x8B, 0x47, 0x48, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00, 0xE8
-	};
-	return find_signature(signature, sizeof(signature));
-}
-
-DWORD CupheadBot::get_infinite_dash_address()
-{
-	static const BYTE signature[] = {
-		0xC7, 0x40, 0x08, 0x04, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x48, 0xD9, 0xEE, 0xD9, 0x58, 0x10, 0x8B, 0x47, 0x40, 0xD9, 0xEE, 0xD9, 0x58, 0x1C, 0x8B, 0x47, 0x7C
-	};
-	return find_signature(signature, sizeof(signature));
-}
-
-DWORD CupheadBot::get_infinite_damage_address()
-{
-	static const BYTE signature[] = {
-		0x8B, 0x46, 0x38, 0x83, 0xEC, 0x08, 0x57, 0x50, 0x90, 0x90, 0x90, 0xFF, 0x50, 0x0C, 0x83, 0xC4, 0x10, 0x8B, 0x46, 0x3C
-	};
-	return find_signature(signature, sizeof(signature));
 }
 
 DWORD CupheadBot::get_money_address()
@@ -214,12 +231,4 @@ DWORD CupheadBot::get_money_address()
 	adr = read_memory<DWORD>(adr + 0xc);
 	adr = read_memory<DWORD>(adr + 0x8);
 	return adr + 0x14;
-}
-
-DWORD CupheadBot::get_invincible_address()
-{
-	static const BYTE signature[] = {
-		0x0F, 0x85, 0xE5, 0x00, 0x00, 0x00, 0x39, 0x3F, 0xD9, 0x47, 0x08, 0xD9, 0x5D, 0xF0, 0xD9, 0x45, 0xF0, 0xD9, 0xEE, 0xDF, 0xF1
-	};
-	return find_signature(signature, sizeof(signature));
 }

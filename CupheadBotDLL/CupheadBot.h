@@ -24,6 +24,8 @@ public:
 	/* Note: must be in a level. */
 	bool set_invincible_flag(bool invincible) { return player_controller.set_invincible(invincible); }
 	bool set_hp_to_max() { return player_controller.set_hp(player_controller.get_max_hp()); }
+	bool set_super_meter_to_max();
+	bool set_super_no_cost(bool enable) { return player_controller.set_super_cost(enable ? 0 : PlayerControllerBot::DEFAULT_SUPER_COST); }
 	bool set_primary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_primary_weapon(weapon); }
 	bool set_secondary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_secondary_weapon(weapon); }
 
@@ -49,12 +51,9 @@ public:
 private:
 	bool set_infinite_parry(bool inf_parry);
 
-	DWORD get_infinite_jumping_address();
-	DWORD get_infinite_parry_address();
-	DWORD get_infinite_dash_address();
-	DWORD get_infinite_damage_address();
+	bool update_super_meter_ui();
+
 	DWORD get_money_address();
-	DWORD get_invincible_address();
 
 	PlayerControllerBot player_controller;
 
@@ -64,6 +63,7 @@ private:
 	static DWORD money_function_adr;
 	DWORD invincible_adr;
 	DWORD infinite_dash_adr;
+	static DWORD ui_super_meter_update_adr;
 
 	// Common handles
 	HMODULE dll_module;

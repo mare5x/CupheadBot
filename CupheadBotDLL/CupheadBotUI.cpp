@@ -59,11 +59,24 @@ void CupheadBotUI::render_ui()
 	}
 	show_error_tooltip(max_hp_failed);
 
+	static bool max_super_failed = false;
+	if (ImGui::Button("Max Super Meter")) {
+		max_super_failed = !bot.set_super_meter_to_max();
+	}
+	show_error_tooltip(max_super_failed);
+
+	static bool no_cost_super_failed = false;
+	if (ImGui::Checkbox("No cost Super", &ui_no_cost_super)) {
+		if (no_cost_super_failed = !bot.set_super_no_cost(ui_no_cost_super))
+			ui_no_cost_super = !ui_no_cost_super;
+	}
+	show_error_tooltip(no_cost_super_failed);
+
 	static bool primary_weapon_failed = false;
 	const auto& weapon_table = PlayerControllerBot::WEAPON_TABLE;
 	// Begin Combo list, add Selectables (items), highlight the already selected item and update the new selected item
 	if (ImGui::BeginCombo("Primary weapon", weapon_table[ui_primary_weapon_idx].name)) {
-		for (int i = 0; i < weapon_table.size(); ++i) {
+		for (size_t i = 0; i < weapon_table.size(); ++i) {
 			// tell the Selectable if it was previously selected
 			bool is_selected = (ui_primary_weapon_idx == i);
 			const auto& weapon = weapon_table[i];
@@ -81,7 +94,7 @@ void CupheadBotUI::render_ui()
 
 	static bool secondary_weapon_failed = false;
 	if (ImGui::BeginCombo("Secondary weapon", weapon_table[ui_secondary_weapon_idx].name)) {
-		for (int i = 0; i < weapon_table.size(); ++i) {
+		for (size_t i = 0; i < weapon_table.size(); ++i) {
 			// tell the Selectable if it was previously selected
 			bool is_selected = (ui_secondary_weapon_idx == i);
 			const auto& weapon = weapon_table[i];
