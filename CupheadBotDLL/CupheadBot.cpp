@@ -3,7 +3,8 @@
 
 DWORD CupheadBot::original_infinite_damage_func = 0;
 DWORD CupheadBot::money_function_adr = 0;
-DWORD CupheadBot::ui_super_meter_update_adr = 0;
+DWORD CupheadBot::hud_super_meter_update_adr = 0;
+DWORD CupheadBot::hud_hp_update_adr = 0;
 
 
 CupheadBot::CupheadBot(HMODULE dll_handle)
@@ -52,31 +53,54 @@ bool CupheadBot::set_money(DWORD money)
 	return false;
 }
 
-bool CupheadBot::update_super_meter_ui()
+bool CupheadBot::update_super_meter_hud()
 {
 	static const BYTE signature[] = {
 		0x55, 0x8B, 0xEC, 0x56, 0x83, 0xEC, 0x14, 0x8B, 0x75, 0x08, 0xD9, 0x46, 0x68, 0xD9, 0x5D, 0xF8, 0xD9, 0x45, 0xF8, 0xD9, 0xEE, 0xD9, 0x46, 0x64, 0xD9, 0x5D, 0xF8, 0xD9, 0x45, 0xF8
 	};
-	if (!ui_super_meter_update_adr) {
-		ui_super_meter_update_adr = find_signature(signature, sizeof(signature));
-		if (!ui_super_meter_update_adr)
-			return false;
-	}
+	if (!set_signature_address(hud_super_meter_update_adr, signature, sizeof(signature)))
+		return false;
+
 	DWORD pc = get_player_controller_address();
 	__asm {
 		sub esp, 0x8
 		push 1
 		push [pc]
-		call [ui_super_meter_update_adr]
+		call [hud_super_meter_update_adr]
 		add esp, 0x10
 	}
 	return true;
 }
 
+bool CupheadBot::update_hp_hud()
+{
+	static const BYTE signature[] = {
+		0x55, 0x8B, 0xEC, 0x57, 0x83, 0xEC, 0x14, 0x8B, 0x7D, 0x08, 0x8B, 0x47, 0x60, 0x8B, 0x4F, 0x5C, 0x83, 0xEC, 0x04, 0x51
+	};
+	if (!set_signature_address(hud_hp_update_adr, signature, sizeof(signature)))
+		return false;
+
+	DWORD pc = get_player_controller_address();
+	__asm {
+		sub esp, 0xC
+		push [pc]
+		call [hud_hp_update_adr]
+		add esp, 0x10
+	}
+	return true;
+}
+
+bool CupheadBot::set_hp_to_max()
+{
+	if (player_controller.set_hp(player_controller.get_max_hp()))
+		return update_hp_hud();
+	return false;
+}
+
 bool CupheadBot::set_super_meter_to_max()
 {
 	if (player_controller.set_super_meter(1000.0f)) // the game automatically bound checks anyways ...
-		return update_super_meter_ui();
+		return update_super_meter_hud();
 	return false;
 }
 
@@ -86,13 +110,9 @@ bool CupheadBot::set_infinite_jumping(bool inf_jump)
 		0x0F, 0x85, 0xBC, 0x01, 0x00, 0x00,
 		0x8B, 0x47, 0x38, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00
 	};
-
 	// get address to NOP
-	if (!infinite_jump_info.hook_at) {
-		infinite_jump_info.hook_at = find_signature(signature, sizeof(signature));
-		if (!infinite_jump_info.hook_at)
-			return false;
-	}
+	if (!set_signature_address(infinite_jump_info.hook_at, signature, sizeof(signature)))
+		return false;
 
 	if (inf_jump) {
 		// nop address
@@ -109,12 +129,8 @@ bool CupheadBot::set_infinite_dashing(bool inf_dash)
 	static const BYTE signature[] = {
 		0xC7, 0x40, 0x08, 0x04, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x48, 0xD9, 0xEE, 0xD9, 0x58, 0x10, 0x8B, 0x47, 0x40, 0xD9, 0xEE, 0xD9, 0x58, 0x1C, 0x8B, 0x47, 0x7C
 	};
-
-	if (!infinite_dash_adr) {
-		infinite_dash_adr = find_signature(signature, sizeof(signature));
-		if (!infinite_dash_adr)
-			return false;
-	}
+	if (!set_signature_address(infinite_dash_adr, signature, sizeof(signature)))
+		return false;
 	
 	// values: 0 (not dashing), 1 (dash started), 2 (currently dashing), 4 (dash finished)
 	// normally the process goes from: 1 -> 2 -> 4 -> 0 (0 is set once cuphead hits the ground)
@@ -149,12 +165,8 @@ bool CupheadBot::set_infinite_damage(bool inf_dmg)
 	static const BYTE signature[] = {
 		0x8B, 0x46, 0x38, 0x83, 0xEC, 0x08, 0x57, 0x50, 0x90, 0x90, 0x90, 0xFF, 0x50, 0x0C, 0x83, 0xC4, 0x10, 0x8B, 0x46, 0x3C
 	};
-	
-	if (!infinite_damage_info.hook_at) {
-		infinite_damage_info.hook_at = find_signature(signature, sizeof(signature));
-		if (!infinite_damage_info.hook_at)
-			return false;
-	}
+	if (!set_signature_address(infinite_damage_info.hook_at, signature, sizeof(signature)))
+		return false;
 	
 	if (inf_dmg)
 		CupheadBot::original_infinite_damage_func = jump_hook(infinite_damage_info.hook_at, 
@@ -172,12 +184,9 @@ bool CupheadBot::set_invincible(bool invincible)
 	static const BYTE signature[] = {
 		0x0F, 0x85, 0xE5, 0x00, 0x00, 0x00, 0x39, 0x3F, 0xD9, 0x47, 0x08, 0xD9, 0x5D, 0xF0, 0xD9, 0x45, 0xF0, 0xD9, 0xEE, 0xDF, 0xF1
 	};
+	if (!set_signature_address(invincible_adr, signature, sizeof(signature)))
+		return false;
 
-	if (!invincible_adr) {
-		invincible_adr = find_signature(signature, sizeof(signature));
-		if (!invincible_adr)
-			return false;
-	}
 	// The difference in invincibility is a single byte -> JNE (0x85) to JE (0x84)
 	// in the damage receiver function.
 	if (invincible) {
@@ -195,12 +204,8 @@ bool CupheadBot::set_infinite_parry(bool inf_parry)
 		0x8B, 0x47, 0x58, 0xC7, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x4C, 0xC7, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00,
 		0x8B, 0x47, 0x48, 0x83, 0xEC, 0x0C, 0x50, 0x39, 0x00, 0xE8
 	};
-	
-	if (!infinite_parry_info.hook_at) {
-		infinite_parry_info.hook_at = find_signature(signature, sizeof(signature));
-		if (!infinite_parry_info.hook_at)
-			return false;
-	}
+	if (!set_signature_address(infinite_parry_info.hook_at, signature, sizeof(signature)))
+		return false;
 
 	if (inf_parry) {
 		nop_fill(infinite_parry_info.hook_at, infinite_parry_info.original_bytes.size());
@@ -216,10 +221,9 @@ DWORD CupheadBot::get_money_address()
 	static const BYTE signature[] = {
 		0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x08, 0xE8, 0x2D, 0x00, 0x00, 0x00, 0x83, 0xEC, 0x0C, 0x50, 0xE8, 0x4C, 0x00, 0x00, 0x00, 0x83, 0xC4, 0x10, 0xC9, 0xC3
 	};
-	if (!money_function_adr) {
-		money_function_adr = find_signature(signature, sizeof(signature));
-		if (!money_function_adr) return 0;
-	}
+	if (!set_signature_address(money_function_adr, signature, sizeof(signature)))
+		return 0;
+
 	// Call a function that returns the correct address to the start of the money address pointer chain.
 	// The start of the pointer chain depends on the currently loaded save file, but with this there aren't any problems.
 	DWORD adr = 0;
@@ -231,4 +235,14 @@ DWORD CupheadBot::get_money_address()
 	adr = read_memory<DWORD>(adr + 0xc);
 	adr = read_memory<DWORD>(adr + 0x8);
 	return adr + 0x14;
+}
+
+bool CupheadBot::set_signature_address(DWORD & dst, const BYTE signature[], size_t size)
+{
+	if (!dst) {
+		dst = find_signature(signature, size);
+		if (!dst)
+			return false;
+	}
+	return true;
 }

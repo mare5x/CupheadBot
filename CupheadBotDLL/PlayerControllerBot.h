@@ -1,7 +1,7 @@
 #include "memory_tools.h"
 
 
-/* Hacks that control Cuphead's stats during a level (eg. HP, invincibilitiy, weapon loadout, ...).*/
+/* Hacks that control Cuphead's stats during a level (eg. HP, invincibilitiy, weapon loadout, ...). */
 class PlayerControllerBot
 {
 public:
@@ -45,8 +45,8 @@ private:
 
 	bool set_loadout_address();
 
-	DWORD primary_weapon_adr, secondary_weapon_adr;
-
 	bool set_base_address_hook();
 	bool restore_base_address_hook();
+
+	DWORD primary_weapon_adr, secondary_weapon_adr;
 };
