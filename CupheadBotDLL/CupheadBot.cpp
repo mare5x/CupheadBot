@@ -3,6 +3,7 @@
 
 DWORD CupheadBot::original_infinite_damage_func = 0;
 DWORD CupheadBot::money_function_adr = 0;
+DWORD CupheadBot::switch_weapon_function_adr = 0;
 DWORD CupheadBot::hud_super_meter_update_adr = 0;
 DWORD CupheadBot::hud_hp_update_adr = 0;
 
@@ -61,7 +62,7 @@ bool CupheadBot::update_super_meter_hud()
 	if (!set_signature_address(hud_super_meter_update_adr, signature, sizeof(signature)))
 		return false;
 
-	DWORD pc = get_player_controller_address();
+	DWORD pc = get_player_stats_address();
 	__asm {
 		sub esp, 0x8
 		push 1
@@ -80,7 +81,7 @@ bool CupheadBot::update_hp_hud()
 	if (!set_signature_address(hud_hp_update_adr, signature, sizeof(signature)))
 		return false;
 
-	DWORD pc = get_player_controller_address();
+	DWORD pc = get_player_stats_address();
 	__asm {
 		sub esp, 0xC
 		push [pc]
@@ -102,6 +103,29 @@ bool CupheadBot::set_super_meter_to_max()
 	if (player_controller.set_super_meter(1000.0f)) // the game automatically bound checks anyways ...
 		return update_super_meter_hud();
 	return false;
+}
+
+bool CupheadBot::set_weapon(const PlayerControllerBot::Weapon & weapon)
+{
+	static const BYTE signature[] = {
+		0x83, 0xC4, 0x10, 0xE9, 0xAA, 0x00, 0x00, 0x00, 0x8B, 0x46, 0x3C, 0x8B, 0x8E, 0x90, 0x00, 0x00, 0x00, 0x83, 0xEC, 0x08, 0x51, 0x50, 0x39, 0x00
+	};
+	if (!switch_weapon_function_adr) {
+		if (switch_weapon_function_adr = find_signature(signature, sizeof(signature)))
+			switch_weapon_function_adr -= 0x50;  // find a simple signature inside the function and then subtract to get the base address of the function
+		else
+			return false;
+	}
+	DWORD weapon_id = weapon.id;
+	__asm {
+		sub esp, 8
+		push [weapon_id]
+		push [PlayerControllerBot::weapon_manager_adr]
+		call [switch_weapon_function_adr]
+		add esp, 0x10
+	}
+
+	return true;
 }
 
 bool CupheadBot::set_infinite_jumping(bool inf_jump)

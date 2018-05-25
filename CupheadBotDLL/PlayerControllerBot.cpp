@@ -17,18 +17,22 @@ BasicHookInfo PlayerControllerBot::player_controller_hook = {
 	0,
 	{ 0x8B, 0xC8, 0x39, 0x09, 0x8B, 0x40, 0x60 }
 };
+DWORD PlayerControllerBot::player_stats_adr = 0;
 DWORD PlayerControllerBot::player_controller_adr = 0;
+DWORD PlayerControllerBot::weapon_manager_adr = 0;
 DWORD PlayerControllerBot::original_base_address_func = 0;
 
 
-/** Trampoline function used to get the address of the PlayerController and then going back to the original function.
+/** Trampoline function used to get the address of the PlayerController and PlayerStats and then going back to the original function.
 	The function hook persists from set_base_address_hook to restore_base_address_hook. That means the player controller
 	address gets constantly updated.*/
 void __declspec(naked) base_address_getter()
 {
 	__asm 
 	{
-		MOV [PlayerControllerBot::player_controller_adr], EAX
+		mov ecx, [ebp + 8]
+		mov [PlayerControllerBot::player_controller_adr], ecx
+		MOV [PlayerControllerBot::player_stats_adr], EAX
 		mov    ecx, eax														// original code replaced by the hook
 		cmp    DWORD PTR[ecx], ecx
 		mov    eax, DWORD PTR[eax + 0x60]
@@ -36,16 +40,10 @@ void __declspec(naked) base_address_getter()
 	}
 }
 
-
-PlayerControllerBot::~PlayerControllerBot()
-{
-	exit();
-}
-
 bool PlayerControllerBot::init()
 {
 	if (set_base_address_hook())
-		return set_loadout_address();
+		return set_addresses();
 	return false;
 }
 
@@ -71,41 +69,41 @@ bool PlayerControllerBot::set_secondary_weapon(const Weapon & weapon)
 bool PlayerControllerBot::set_invincible(bool invincible)
 {
 	if (!initialized_or_init()) return false;
-	write_memory<bool>(player_controller_adr + 0x6c, invincible);
+	write_memory<bool>(player_stats_adr + 0x6c, invincible);
 	return true;
 }
 
 bool PlayerControllerBot::set_hp(DWORD new_hp)
 {
 	if (!initialized_or_init()) return false;
-	write_memory<DWORD>(player_controller_adr + 0x60, new_hp);
+	write_memory<DWORD>(player_stats_adr + 0x60, new_hp);
 	return true;
 }
 
 DWORD PlayerControllerBot::get_max_hp()
 {
 	if (!initialized_or_init()) return 0;
-	return read_memory<DWORD>(player_controller_adr + 0x5c);
+	return read_memory<DWORD>(player_stats_adr + 0x5c);
 }
 
 bool PlayerControllerBot::set_super_cost(float new_cost)
 {
 	if (!initialized_or_init()) return false;
-	write_memory<float>(player_controller_adr + 0x70, new_cost);
+	write_memory<float>(player_stats_adr + 0x70, new_cost);
 	return true;
 }
 
 bool PlayerControllerBot::set_super_meter(float val)
 {
 	if (!initialized_or_init()) return false;
-	write_memory<float>(player_controller_adr + 0x68, val);
+	write_memory<float>(player_stats_adr + 0x68, val);
 	return true;
 }
 
 float PlayerControllerBot::get_max_super()
 {
 	if (!initialized_or_init()) return 0;
-	return read_memory<float>(player_controller_adr + 0x64);
+	return read_memory<float>(player_stats_adr + 0x64);
 }
 
 bool PlayerControllerBot::initialized_or_init()
@@ -113,15 +111,18 @@ bool PlayerControllerBot::initialized_or_init()
 	// Once the hook is placed all we can do is wait for it to get executed and fill in the player_controller_adr
 	if (!original_base_address_func)
 		return init();
-	return set_loadout_address();
+	return set_addresses();
 }
 
-bool PlayerControllerBot::set_loadout_address()
+bool PlayerControllerBot::set_addresses()
 {
-	if (!player_controller_adr) return false;
-	DWORD loadout_p = read_memory<DWORD>(player_controller_adr + 0x38);
+	if (!player_stats_adr) return false;
+	DWORD loadout_p = read_memory<DWORD>(player_stats_adr + 0x38);
 	primary_weapon_adr = loadout_p + 0x8;
 	secondary_weapon_adr = loadout_p + 0xC;
+
+	weapon_manager_adr = read_memory<DWORD>(player_controller_adr + 0x64);
+
 	return true;
 }
 

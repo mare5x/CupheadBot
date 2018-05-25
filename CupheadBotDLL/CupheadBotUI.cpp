@@ -207,6 +207,7 @@ void CupheadBotUI::render_diagnostics()
 	ImGui::Text("d3d11_hook::g_p_device_context: %x", d3d11_hook::g_p_device_context);
 	
 	ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
+	ImGui::Text("PlayerStats: %x", bot.get_player_stats_address());
 
 	ImGui::Text("Infinite jump hook_at: %x", bot.get_infinite_jump_info().hook_at);
 	ImGui::Text("Infinite parry hook_at: %x", bot.get_infinite_parry_info().hook_at);

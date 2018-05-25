@@ -20,14 +20,13 @@ public:
 	bool set_money(DWORD money);
 	
 	// Player controller hacks
-	DWORD get_player_controller_address() { return player_controller.get_base_address(); }
-	/* Note: must be in a level. */
-	bool set_invincible_flag(bool invincible) { return player_controller.set_invincible(invincible); }
+	bool set_invincible_flag(bool invincible) { return player_controller.set_invincible(invincible); } 	/* Note: must be in a level. */
 	bool set_hp_to_max();
 	bool set_super_meter_to_max();
 	bool set_super_no_cost(bool enable) { return player_controller.set_super_cost(enable ? 0 : PlayerControllerBot::DEFAULT_SUPER_COST); }
-	bool set_primary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_primary_weapon(weapon); }
-	bool set_secondary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_secondary_weapon(weapon); }
+	bool set_primary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_primary_weapon(weapon) && set_weapon(weapon); }
+	bool set_secondary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_secondary_weapon(weapon) && set_weapon(weapon); }
+	bool set_weapon(const PlayerControllerBot::Weapon& weapon);
 
 	// Cuphead manipulation hacks
 	bool set_infinite_jumping(bool inf_jump);
@@ -40,6 +39,8 @@ public:
 	HMODULE get_cuphead_module() const { return cuphead_module; }
 	HWND get_cuphead_window_handle() const { return cuphead_window_handle; }
 
+	DWORD get_player_stats_address() { return player_controller.get_stats_address(); }
+	DWORD get_player_controller_address() { return player_controller.get_player_controller_address(); }
 	const BasicHookInfo get_infinite_damage_info() const { return infinite_damage_info; }
 	const BasicHookInfo get_infinite_jump_info() const { return infinite_jump_info; }
 	const BasicHookInfo get_infinite_parry_info() const { return infinite_parry_info; }
@@ -66,7 +67,7 @@ private:
 	BasicHookInfo infinite_damage_info;
 	DWORD invincible_adr;
 	DWORD infinite_dash_adr;
-	static DWORD money_function_adr;
+	static DWORD money_function_adr, switch_weapon_function_adr;
 	static DWORD hud_super_meter_update_adr, hud_hp_update_adr;
 
 	// Common handles
