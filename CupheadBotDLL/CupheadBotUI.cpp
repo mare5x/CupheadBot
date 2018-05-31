@@ -110,12 +110,28 @@ void CupheadBotUI::render_ui()
 	}
 	show_error_tooltip(secondary_weapon_failed);
 
+	static bool super_failed = false;
+	const auto& super_table = PlayerDataBot::Loadout::SUPER_TABLE;
+	if (ImGui::BeginCombo("Super", super_table[ui_super_idx].name)) {
+		for (size_t i = 0; i < super_table.size(); ++i) {
+			bool is_selected = (ui_super_idx == i);
+			const auto& super = super_table[i];
+			if (ImGui::Selectable(super.name, is_selected)) {
+				super_failed = !bot.set_super(super);
+				if (!super_failed) ui_super_idx = i;
+			}
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+
+		ImGui::EndCombo();
+	}
+	show_error_tooltip(super_failed);
+
 	static bool charm_failed = false;
 	const auto& charm_table = PlayerDataBot::Loadout::CHARM_TABLE;
-	// Begin Combo list, add Selectables (items), highlight the already selected item and update the new selected item
 	if (ImGui::BeginCombo("Charm", charm_table[ui_charm_idx].name)) {
 		for (size_t i = 0; i < charm_table.size(); ++i) {
-			// tell the Selectable if it was previously selected
 			bool is_selected = (ui_charm_idx == i);
 			const auto& charm = charm_table[i];
 			if (ImGui::Selectable(charm.name, is_selected)) {

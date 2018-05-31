@@ -21,6 +21,13 @@ const std::array<PlayerDataBot::Loadout::Charm, PlayerDataBot::Loadout::N_CHARMS
 } };
 
 
+const std::array<PlayerDataBot::Loadout::Super, PlayerDataBot::Loadout::N_SUPERS> PlayerDataBot::Loadout::SUPER_TABLE = { {
+	{ "ENERGY BEAM", 0x56D53D31 },
+	{ "INVINCIBILITY", 0x591C13BA },
+	{ "GIANT GHOST", 0x577A1293 }
+} };
+
+
 DWORD PlayerDataBot::get_player_data_func_adr = 0;
 
 

@@ -29,6 +29,7 @@ public:
 	bool set_secondary_weapon(const LoadoutWeapon & weapon);
 	bool set_weapon(const LoadoutWeapon & weapon);  /* Switch to weapon without modifying the loadout. */
 	bool set_charm(const LoadoutCharm& charm);
+	bool set_super(const LoadoutSuper& super);
 	DWORD get_money() { return player_data.get_money(); }
 	bool set_money(DWORD money) { return player_data.set_money(money); }
 

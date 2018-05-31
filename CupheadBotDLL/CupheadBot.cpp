@@ -128,6 +128,16 @@ bool CupheadBot::set_charm(const LoadoutCharm & charm)
 	return false;
 }
 
+bool CupheadBot::set_super(const LoadoutSuper & super)
+{
+	PlayerDataBot::Loadout loadout = player_data.get_loadout();
+	if (loadout.is_valid()) {
+		loadout.set_super(super);
+		return true;
+	}
+	return false;
+}
+
 bool CupheadBot::set_weapon(const LoadoutWeapon & weapon)
 {
 	static const BYTE signature[] = {
