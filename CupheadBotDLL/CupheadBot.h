@@ -4,6 +4,7 @@
 #pragma once
 #include "memory_tools.h"
 #include "PlayerControllerBot.h"
+#include "PlayerDataBot.h"
 
 class CupheadBot
 {
@@ -16,17 +17,20 @@ public:
 	/** Allows walking through walls on the map/level selection screen. 
 		Note: must be on the level selection screen. */
 	void wallhack(bool enable);
-	DWORD get_money();
-	bool set_money(DWORD money);
 	
 	// Player controller hacks
 	bool set_invincible_flag(bool invincible) { return player_controller.set_invincible(invincible); } 	/* Note: must be in a level. */
 	bool set_hp_to_max();
 	bool set_super_meter_to_max();
 	bool set_super_no_cost(bool enable) { return player_controller.set_super_cost(enable ? 0 : PlayerControllerBot::DEFAULT_SUPER_COST); }
-	bool set_primary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_primary_weapon(weapon) && set_weapon(weapon); }
-	bool set_secondary_weapon(const PlayerControllerBot::Weapon& weapon) { return player_controller.set_secondary_weapon(weapon) && set_weapon(weapon); }
-	bool set_weapon(const PlayerControllerBot::Weapon& weapon);
+
+	// PlayerData hacks (static)
+	bool set_primary_weapon(const LoadoutWeapon & weapon);
+	bool set_secondary_weapon(const LoadoutWeapon & weapon);
+	bool set_weapon(const LoadoutWeapon & weapon);  /* Switch to weapon without modifying the loadout. */
+	bool set_charm(const LoadoutCharm& charm);
+	DWORD get_money() { return player_data.get_money(); }
+	bool set_money(DWORD money) { return player_data.set_money(money); }
 
 	// Cuphead manipulation hacks
 	bool set_infinite_jumping(bool inf_jump);
@@ -39,14 +43,13 @@ public:
 	HMODULE get_cuphead_module() const { return cuphead_module; }
 	HWND get_cuphead_window_handle() const { return cuphead_window_handle; }
 
-	DWORD get_player_stats_address() { return player_controller.get_stats_address(); }
-	DWORD get_player_controller_address() { return player_controller.get_player_controller_address(); }
+	PlayerControllerBot& get_player_controller() { return player_controller; }
 	const BasicHookInfo get_infinite_damage_info() const { return infinite_damage_info; }
 	const BasicHookInfo get_infinite_jump_info() const { return infinite_jump_info; }
 	const BasicHookInfo get_infinite_parry_info() const { return infinite_parry_info; }
 	DWORD get_invincible_adr() const { return invincible_adr; }
-	DWORD get_money_function_adr() const { return money_function_adr; }
 	DWORD get_infinite_dash_adr() const { return infinite_dash_adr; }
+	PlayerDataBot& get_player_data() { return player_data; }
 
 	static DWORD original_infinite_damage_func;
 private:
@@ -58,16 +61,15 @@ private:
 	bool update_super_meter_hud();
 	bool update_hp_hud();
 
-	DWORD get_money_address();
-
 	PlayerControllerBot player_controller;
+	PlayerDataBot player_data;
 
 	// Hook data
 	BasicHookInfo infinite_jump_info, infinite_parry_info;
 	BasicHookInfo infinite_damage_info;
 	DWORD invincible_adr;
 	DWORD infinite_dash_adr;
-	static DWORD money_function_adr, switch_weapon_function_adr;
+	static DWORD switch_weapon_function_adr;
 	static DWORD hud_super_meter_update_adr, hud_hp_update_adr;
 
 	// Common handles

@@ -45,6 +45,7 @@ private:
 
 	int ui_primary_weapon_idx;
 	int ui_secondary_weapon_idx;
+	int ui_charm_idx;
 	int ui_money;
 
 	// ImGUI flags

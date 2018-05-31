@@ -1,3 +1,6 @@
+// Common functions related to a process' memory.
+
+
 #pragma once
 #include <Windows.h>
 #include <array>
@@ -34,7 +37,7 @@ T read_memory(DWORD address)
 template<typename T>
 void read_memory(DWORD address, T* buffer, size_t size)
 {
-	memcpy(buffer, (DWORD*)address, size);
+	memcpy(buffer, (T*)address, size);
 }
 
 

@@ -2,7 +2,6 @@
 
 
 DWORD CupheadBot::original_infinite_damage_func = 0;
-DWORD CupheadBot::money_function_adr = 0;
 DWORD CupheadBot::switch_weapon_function_adr = 0;
 DWORD CupheadBot::hud_super_meter_update_adr = 0;
 DWORD CupheadBot::hud_hp_update_adr = 0;
@@ -23,10 +22,14 @@ CupheadBot::CupheadBot(HMODULE dll_handle)
 
 void CupheadBot::exit()
 {
-	set_infinite_jumping(false);
-	set_infinite_dashing(false);
-	set_infinite_damage(false);
-	set_invincible(false);
+	if (infinite_jump_info.hook_at)
+		set_infinite_jumping(false);
+	if (infinite_dash_adr)
+		set_infinite_dashing(false);
+	if (infinite_damage_info.hook_at)
+		set_infinite_damage(false);
+	if (invincible_adr)
+		set_invincible(false);
 	player_controller.exit();
 }
 
@@ -38,22 +41,6 @@ void CupheadBot::wallhack(bool enable)
 	write_memory<DWORD>(ptr_chain, enable ? 1 : 2);
 }
 
-DWORD CupheadBot::get_money()
-{
-	if (DWORD adr = get_money_address())
-		return read_memory<DWORD>(adr);
-	return 0;
-}
-
-bool CupheadBot::set_money(DWORD money)
-{
-	if (DWORD adr = get_money_address()) {
-		write_memory<DWORD>(adr, money);
-		return true;
-	}
-	return false;
-}
-
 bool CupheadBot::update_super_meter_hud()
 {
 	static const BYTE signature[] = {
@@ -62,7 +49,10 @@ bool CupheadBot::update_super_meter_hud()
 	if (!set_signature_address(hud_super_meter_update_adr, signature, sizeof(signature)))
 		return false;
 
-	DWORD pc = get_player_stats_address();
+	DWORD pc = player_controller.get_stats_address();
+	if (!pc)
+		return false;
+
 	__asm {
 		sub esp, 0x8
 		push 1
@@ -81,7 +71,10 @@ bool CupheadBot::update_hp_hud()
 	if (!set_signature_address(hud_hp_update_adr, signature, sizeof(signature)))
 		return false;
 
-	DWORD pc = get_player_stats_address();
+	DWORD pc = player_controller.get_stats_address();
+	if (!pc)
+		return false;
+
 	__asm {
 		sub esp, 0xC
 		push [pc]
@@ -105,7 +98,37 @@ bool CupheadBot::set_super_meter_to_max()
 	return false;
 }
 
-bool CupheadBot::set_weapon(const PlayerControllerBot::Weapon & weapon)
+bool CupheadBot::set_primary_weapon(const LoadoutWeapon & weapon)
+{
+	PlayerDataBot::Loadout loadout = player_data.get_loadout();
+	if (loadout.is_valid()) {
+		loadout.set_primary_weapon(weapon);
+		return set_weapon(weapon);
+	}
+	return false;
+}
+
+bool CupheadBot::set_secondary_weapon(const LoadoutWeapon & weapon)
+{
+	PlayerDataBot::Loadout loadout = player_data.get_loadout();
+	if (loadout.is_valid()) {
+		loadout.set_secondary_weapon(weapon);
+		return set_weapon(weapon);
+	}
+	return false;
+}
+
+bool CupheadBot::set_charm(const LoadoutCharm & charm)
+{
+	PlayerDataBot::Loadout loadout = player_data.get_loadout();
+	if (loadout.is_valid()) {
+		loadout.set_charm(charm);
+		return true;
+	}
+	return false;
+}
+
+bool CupheadBot::set_weapon(const LoadoutWeapon & weapon)
 {
 	static const BYTE signature[] = {
 		0x83, 0xC4, 0x10, 0xE9, 0xAA, 0x00, 0x00, 0x00, 0x8B, 0x46, 0x3C, 0x8B, 0x8E, 0x90, 0x00, 0x00, 0x00, 0x83, 0xEC, 0x08, 0x51, 0x50, 0x39, 0x00
@@ -116,11 +139,14 @@ bool CupheadBot::set_weapon(const PlayerControllerBot::Weapon & weapon)
 		else
 			return false;
 	}
+	DWORD weapon_manager_adr = player_controller.get_weapon_manager_address();
+	if (!weapon_manager_adr)
+		return false;
 	DWORD weapon_id = weapon.id;
 	__asm {
 		sub esp, 8
 		push [weapon_id]
-		push [PlayerControllerBot::weapon_manager_adr]
+		push [weapon_manager_adr]
 		call [switch_weapon_function_adr]
 		add esp, 0x10
 	}
@@ -238,27 +264,6 @@ bool CupheadBot::set_infinite_parry(bool inf_parry)
 		write_code_buffer(infinite_parry_info.hook_at, infinite_parry_info.original_bytes.data(), infinite_parry_info.original_bytes.size());
 	}
 	return true;
-}
-
-DWORD CupheadBot::get_money_address()
-{
-	static const BYTE signature[] = {
-		0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x08, 0xE8, 0x2D, 0x00, 0x00, 0x00, 0x83, 0xEC, 0x0C, 0x50, 0xE8, 0x4C, 0x00, 0x00, 0x00, 0x83, 0xC4, 0x10, 0xC9, 0xC3
-	};
-	if (!set_signature_address(money_function_adr, signature, sizeof(signature)))
-		return 0;
-
-	// Call a function that returns the correct address to the start of the money address pointer chain.
-	// The start of the pointer chain depends on the currently loaded save file, but with this there aren't any problems.
-	DWORD adr = 0;
-	__asm {
-		CALL [money_function_adr]
-		mov adr, eax
-	}
-
-	adr = read_memory<DWORD>(adr + 0xc);
-	adr = read_memory<DWORD>(adr + 0x8);
-	return adr + 0x14;
 }
 
 bool CupheadBot::set_signature_address(DWORD & dst, const BYTE signature[], size_t size)

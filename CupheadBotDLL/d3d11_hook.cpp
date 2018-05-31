@@ -31,7 +31,7 @@ HRESULT __stdcall d3d11_hook::present_callback(IDXGISwapChain* pSwapChain, UINT 
 	if (p_present_impl(g_p_device, g_p_device_context, pSwapChain)) {
 		// unhook d3d11 cleanly
 		// restore original code and jump directly to the original instead of going through the post detour cave
-		// Instead of calling Present() it would be better to jump to it, because now Present returns its value to this function
+		// Instead of calling Present() it might be better to jump to it, because now Present returns its value to this function
 		// and this function returns the value to the function that called Present initially
 		unhook_d3d11();
 		return g_p_present(pSwapChain, SyncInterval, Flags);

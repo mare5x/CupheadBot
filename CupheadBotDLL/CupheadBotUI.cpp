@@ -73,7 +73,7 @@ void CupheadBotUI::render_ui()
 	show_error_tooltip(no_cost_super_failed);
 
 	static bool primary_weapon_failed = false;
-	const auto& weapon_table = PlayerControllerBot::WEAPON_TABLE;
+	const auto& weapon_table = PlayerDataBot::Loadout::WEAPON_TABLE;
 	// Begin Combo list, add Selectables (items), highlight the already selected item and update the new selected item
 	if (ImGui::BeginCombo("Primary weapon", weapon_table[ui_primary_weapon_idx].name)) {
 		for (size_t i = 0; i < weapon_table.size(); ++i) {
@@ -109,6 +109,26 @@ void CupheadBotUI::render_ui()
 		ImGui::EndCombo();
 	}
 	show_error_tooltip(secondary_weapon_failed);
+
+	static bool charm_failed = false;
+	const auto& charm_table = PlayerDataBot::Loadout::CHARM_TABLE;
+	// Begin Combo list, add Selectables (items), highlight the already selected item and update the new selected item
+	if (ImGui::BeginCombo("Charm", charm_table[ui_charm_idx].name)) {
+		for (size_t i = 0; i < charm_table.size(); ++i) {
+			// tell the Selectable if it was previously selected
+			bool is_selected = (ui_charm_idx == i);
+			const auto& charm = charm_table[i];
+			if (ImGui::Selectable(charm.name, is_selected)) {
+				charm_failed = !bot.set_charm(charm);
+				if (!charm_failed) ui_charm_idx = i;
+			}
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+
+		ImGui::EndCombo();
+	}
+	show_error_tooltip(charm_failed);
 
 	static bool inf_jump_failed = false;
 	static bool inf_dashing_failed = false;
@@ -176,8 +196,12 @@ LRESULT CALLBACK CupheadBotUI::input_handler(_In_ HWND hwnd, _In_ UINT uMsg, _In
 		ui_ptr->toggle_visibility();
 	}
 
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
-		return true;
+	if (ui_ptr->is_visible()) {
+		ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam);
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.WantCaptureKeyboard) // || io.WantCaptureMouse)
+			return true;
+	}
 
 	return ui_ptr->orig_wndproc(hwnd, uMsg, wParam, lParam);
 }
@@ -206,8 +230,8 @@ void CupheadBotUI::render_diagnostics()
 	ImGui::Text("d3d11_hook::g_p_device: %x", d3d11_hook::g_p_device);
 	ImGui::Text("d3d11_hook::g_p_device_context: %x", d3d11_hook::g_p_device_context);
 	
-	ImGui::Text("PlayerController: %x", bot.get_player_controller_address());
-	ImGui::Text("PlayerStats: %x", bot.get_player_stats_address());
+	ImGui::Text("PlayerController: %x", bot.get_player_controller().get_player_controller_address());
+	ImGui::Text("PlayerStats: %x", bot.get_player_controller().get_stats_address());
 
 	ImGui::Text("Infinite jump hook_at: %x", bot.get_infinite_jump_info().hook_at);
 	ImGui::Text("Infinite parry hook_at: %x", bot.get_infinite_parry_info().hook_at);
@@ -215,6 +239,9 @@ void CupheadBotUI::render_diagnostics()
 	ImGui::Text("Infinite damage hook_at: %x", bot.get_infinite_damage_info().hook_at);
 	
 	ImGui::Text("Invincible address hook_at: %x", bot.get_invincible_adr());
+
+	ImGui::Text("PlayerData: %x", bot.get_player_data().get_player_data_address());
+	ImGui::Text("Loadout address: %x", bot.get_player_data().get_loadout_address());
 }
 
 void CupheadBotUI::show_error_tooltip(bool error)

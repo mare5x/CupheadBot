@@ -3,15 +3,6 @@
 
 const float PlayerControllerBot::DEFAULT_SUPER_COST = 10.0f;
 
-const std::array<PlayerControllerBot::Weapon, PlayerControllerBot::N_WEAPONS> PlayerControllerBot::WEAPON_TABLE = { {
-	{ "PEASHOOTER", 1456773641 },
-	{ "SPREAD", 1456773649 },
-	{ "CHASER", 1460621839 },
-	{ "LOBBER", 1467024095 },
-	{ "CHARGE", 1466416941 },
-	{ "ROUNDABOUT", 1466518900 }
-} };
-
 // static members are declared in a class and defined here https://stackoverflow.com/questions/1410563/what-is-the-difference-between-a-definition-and-a-declaration
 BasicHookInfo PlayerControllerBot::player_controller_hook = {
 	0,
@@ -19,7 +10,6 @@ BasicHookInfo PlayerControllerBot::player_controller_hook = {
 };
 DWORD PlayerControllerBot::player_stats_adr = 0;
 DWORD PlayerControllerBot::player_controller_adr = 0;
-DWORD PlayerControllerBot::weapon_manager_adr = 0;
 DWORD PlayerControllerBot::original_base_address_func = 0;
 
 
@@ -42,28 +32,12 @@ void __declspec(naked) base_address_getter()
 
 bool PlayerControllerBot::init()
 {
-	if (set_base_address_hook())
-		return set_addresses();
-	return false;
+	return set_base_address_hook();
 }
 
 void PlayerControllerBot::exit()
 {
 	restore_base_address_hook();
-}
-
-bool PlayerControllerBot::set_primary_weapon(const Weapon & weapon)
-{
-	if (!initialized_or_init()) return false;
-	write_memory<DWORD>(primary_weapon_adr, weapon.id);
-	return true;
-}
-
-bool PlayerControllerBot::set_secondary_weapon(const Weapon & weapon)
-{
-	if (!initialized_or_init()) return false;
-	write_memory<DWORD>(secondary_weapon_adr, weapon.id);
-	return true;
 }
 
 bool PlayerControllerBot::set_invincible(bool invincible)
@@ -106,24 +80,24 @@ float PlayerControllerBot::get_max_super()
 	return read_memory<float>(player_stats_adr + 0x64);
 }
 
+DWORD PlayerControllerBot::get_loadout_address()
+{
+	if (!initialized_or_init()) return 0;
+	return read_memory<DWORD>(player_stats_adr + 0x38);
+}
+
+DWORD PlayerControllerBot::get_weapon_manager_address()
+{
+	if (!initialized_or_init()) return 0;
+	return read_memory<DWORD>(player_controller_adr + 0x64);
+}
+
 bool PlayerControllerBot::initialized_or_init()
 {
 	// Once the hook is placed all we can do is wait for it to get executed and fill in the player_controller_adr
 	if (!original_base_address_func)
-		return init();
-	return set_addresses();
-}
-
-bool PlayerControllerBot::set_addresses()
-{
-	if (!player_stats_adr) return false;
-	DWORD loadout_p = read_memory<DWORD>(player_stats_adr + 0x38);
-	primary_weapon_adr = loadout_p + 0x8;
-	secondary_weapon_adr = loadout_p + 0xC;
-
-	weapon_manager_adr = read_memory<DWORD>(player_controller_adr + 0x64);
-
-	return true;
+		init();
+	return player_controller_adr;
 }
 
 bool PlayerControllerBot::set_base_address_hook()
