@@ -7,30 +7,23 @@ class PlayerDataBot
 public:
 	struct Loadout
 	{
-		static const size_t N_WEAPONS = 6;
-		struct Weapon
+		struct _LoadoutItem
 		{
 			const char* name;
 			DWORD id;
 		};
-		// Index to Weapon table
-		static const std::array<Weapon, N_WEAPONS> WEAPON_TABLE;
 
-		static const size_t N_CHARMS = 6;
-		struct Charm
-		{
-			const char* name;
-			DWORD id;
-		};
-		static const std::array<Charm, N_CHARMS> CHARM_TABLE;
+		static const size_t N_WEAPONS = 6;
+		typedef _LoadoutItem Weapon;
+		static const std::array<Weapon, N_WEAPONS> WEAPON_TABLE;  // Index to Weapon table
 
 		static const size_t N_SUPERS = 3;
-		struct Super
-		{
-			const char* name;
-			DWORD id;
-		};
+		typedef _LoadoutItem Super;
 		static const std::array<Super, N_SUPERS> SUPER_TABLE;
+
+		static const size_t N_CHARMS = 6;
+		typedef _LoadoutItem Charm;
+		static const std::array<Charm, N_CHARMS> CHARM_TABLE;
 
 		Loadout(DWORD loadout_address) : loadout_adr(loadout_address) { }
 		
@@ -40,7 +33,12 @@ public:
 		void set_secondary_weapon(const Weapon& weapon) { write_memory<DWORD>(loadout_adr + 0xC, weapon.id); }
 		void set_super(const Super& super) { write_memory<DWORD>(loadout_adr + 0x10, super.id); }
 		void set_charm(const Charm& charm) { write_memory<DWORD>(loadout_adr + 0x14, charm.id); }
-	private:
+
+		const Weapon& get_primary_weapon() const;
+		const Weapon& get_secondary_weapon() const;
+		const Super& get_super() const;
+		const Charm& get_charm() const;
+
 		DWORD loadout_adr;
 	};
 
@@ -59,7 +57,9 @@ private:
 	static DWORD get_player_data_func_adr;
 };
 
-
 typedef PlayerDataBot::Loadout::Weapon LoadoutWeapon;
 typedef PlayerDataBot::Loadout::Charm LoadoutCharm;
 typedef PlayerDataBot::Loadout::Super LoadoutSuper;
+
+
+bool operator==(const PlayerDataBot::Loadout::_LoadoutItem& left, const PlayerDataBot::Loadout::_LoadoutItem& right);

@@ -28,6 +28,12 @@ const std::array<PlayerDataBot::Loadout::Super, PlayerDataBot::Loadout::N_SUPERS
 } };
 
 
+bool operator==(const PlayerDataBot::Loadout::_LoadoutItem& left, const PlayerDataBot::Loadout::_LoadoutItem& right) 
+{ 
+	return left.id == right.id; 
+}
+
+
 DWORD PlayerDataBot::get_player_data_func_adr = 0;
 
 
@@ -89,4 +95,40 @@ DWORD PlayerDataBot::get_player_data_address()
 		mov adr, eax
 	}
 	return adr;
+}
+
+const PlayerDataBot::Loadout::Weapon & PlayerDataBot::Loadout::get_primary_weapon() const
+{
+	DWORD id = read_memory<DWORD>(loadout_adr + 0x8);
+	for (const auto& weapon : WEAPON_TABLE)
+		if (weapon.id == id)
+			return weapon;
+	return WEAPON_TABLE.front();
+}
+
+const PlayerDataBot::Loadout::Weapon & PlayerDataBot::Loadout::get_secondary_weapon() const
+{
+	DWORD id = read_memory<DWORD>(loadout_adr + 0xC);
+	for (const auto& weapon : WEAPON_TABLE)
+		if (weapon.id == id)
+			return weapon;
+	return WEAPON_TABLE.front();
+}
+
+const PlayerDataBot::Loadout::Super & PlayerDataBot::Loadout::get_super() const
+{
+	DWORD id = read_memory<DWORD>(loadout_adr + 0x10);
+	for (const auto& super : SUPER_TABLE)
+		if (super.id == id)
+			return super;
+	return SUPER_TABLE.front();
+}
+
+const PlayerDataBot::Loadout::Charm & PlayerDataBot::Loadout::get_charm() const
+{
+	DWORD id = read_memory<DWORD>(loadout_adr + 0x14);
+	for (const auto& charm : CHARM_TABLE)
+		if (charm.id == id)
+			return charm;
+	return CHARM_TABLE.front();
 }
