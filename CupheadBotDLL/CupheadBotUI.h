@@ -31,6 +31,7 @@ public:
 	bool is_imgui_initialized() const { return imgui_initialized; }
 private:
 	void render_diagnostics();
+	void render_loadout();
 	void show_error_tooltip(bool error);
 
 	// UI flags

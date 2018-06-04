@@ -29,9 +29,12 @@ void CupheadBotUI::render_ui()
 	if (ImGui::CollapsingHeader("Diagnostics"))
 		render_diagnostics();
 
+	static bool wallhack_failed = false;
 	if (ImGui::Checkbox("Wallhack", &ui_wallhack_enabled)) {
-		bot.wallhack(ui_wallhack_enabled);
+		if (wallhack_failed = !bot.wallhack(ui_wallhack_enabled))
+			ui_wallhack_enabled = !ui_wallhack_enabled;
 	}
+	show_error_tooltip(wallhack_failed);
 
 	static bool set_money_failed = false;
 	if (ImGui::InputInt("Money", &ui_money, 1, 5)) {
@@ -72,71 +75,7 @@ void CupheadBotUI::render_ui()
 	}
 	show_error_tooltip(no_cost_super_failed);
 
-	static bool primary_weapon_failed = false;
-	const auto& loadout = bot.get_player_data().get_loadout();
-	const auto& weapon_table = loadout.WEAPON_TABLE;
-	const LoadoutWeapon& selected_primary_weapon = loadout.get_primary_weapon();
-	// Begin Combo list, add Selectables (items), highlight the already selected item and update the new selected item
-	if (ImGui::BeginCombo("Primary weapon", selected_primary_weapon.name)) {
-		for (size_t i = 0; i < weapon_table.size(); ++i) {
-			// tell the Selectable if it was previously selected
-			const auto& weapon = weapon_table[i];
-			bool is_selected = (weapon == selected_primary_weapon);
-			if (ImGui::Selectable(weapon.name, is_selected))
-				primary_weapon_failed = !bot.set_primary_weapon(weapon);
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
-		}
-		ImGui::EndCombo();
-	}
-	show_error_tooltip(primary_weapon_failed);
-
-	static bool secondary_weapon_failed = false;
-	const LoadoutWeapon& selected_secondary_weapon = loadout.get_secondary_weapon();
-	if (ImGui::BeginCombo("Secondary weapon", selected_secondary_weapon.name)) {
-		for (size_t i = 0; i < weapon_table.size(); ++i) {
-			const auto& weapon = weapon_table[i];
-			bool is_selected = (selected_secondary_weapon == weapon);
-			if (ImGui::Selectable(weapon.name, is_selected))
-				secondary_weapon_failed = !bot.set_secondary_weapon(weapon);
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
-		}
-		ImGui::EndCombo();
-	}
-	show_error_tooltip(secondary_weapon_failed);
-
-	static bool super_failed = false;
-	const auto& super_table = PlayerDataBot::Loadout::SUPER_TABLE;
-	const LoadoutSuper& selected_super = loadout.get_super();
-	if (ImGui::BeginCombo("Super", selected_super.name)) {
-		for (size_t i = 0; i < super_table.size(); ++i) {
-			const auto& super = super_table[i];
-			bool is_selected = (selected_super == super);
-			if (ImGui::Selectable(super.name, is_selected))
-				super_failed = !bot.set_super(super);
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
-		}
-		ImGui::EndCombo();
-	}
-	show_error_tooltip(super_failed);
-
-	static bool charm_failed = false;
-	const auto& charm_table = PlayerDataBot::Loadout::CHARM_TABLE;
-	const LoadoutCharm& selected_charm = loadout.get_charm();
-	if (ImGui::BeginCombo("Charm", selected_charm.name)) {
-		for (size_t i = 0; i < charm_table.size(); ++i) {
-			const auto& charm = charm_table[i];
-			bool is_selected = (selected_charm == charm);
-			if (ImGui::Selectable(charm.name, is_selected))
-				charm_failed = !bot.set_charm(charm);
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
-		}
-		ImGui::EndCombo();
-	}
-	show_error_tooltip(charm_failed);
+	render_loadout();
 
 	static bool inf_jump_failed = false;
 	static bool inf_dashing_failed = false;
@@ -250,6 +189,80 @@ void CupheadBotUI::render_diagnostics()
 
 	ImGui::Text("PlayerData: %x", bot.get_player_data().get_player_data_address());
 	ImGui::Text("Loadout address: %x", bot.get_player_data().get_loadout_address());
+}
+
+void CupheadBotUI::render_loadout()
+{
+	if (!bot.get_wallhack_adr()) {
+		ImGui::TextColored({ 1.0f, 0.0f, 0.0f, 1.0f }, "LOAD THE GAME TO CHANGE LOADOUT");
+		return;
+	}
+
+	static bool primary_weapon_failed = false;
+	const auto& loadout = bot.get_player_data().get_loadout();
+	const auto& weapon_table = loadout.WEAPON_TABLE;
+	const LoadoutWeapon& selected_primary_weapon = loadout.get_primary_weapon();
+	// Begin Combo list, add Selectables (items), highlight the already selected item and update the new selected item
+	if (ImGui::BeginCombo("Primary weapon", selected_primary_weapon.name)) {
+		for (size_t i = 0; i < weapon_table.size(); ++i) {
+			// tell the Selectable if it was previously selected
+			const auto& weapon = weapon_table[i];
+			bool is_selected = (weapon == selected_primary_weapon);
+			if (ImGui::Selectable(weapon.name, is_selected))
+				primary_weapon_failed = !bot.set_primary_weapon(weapon);
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+	show_error_tooltip(primary_weapon_failed);
+
+	static bool secondary_weapon_failed = false;
+	const LoadoutWeapon& selected_secondary_weapon = loadout.get_secondary_weapon();
+	if (ImGui::BeginCombo("Secondary weapon", selected_secondary_weapon.name)) {
+		for (size_t i = 0; i < weapon_table.size(); ++i) {
+			const auto& weapon = weapon_table[i];
+			bool is_selected = (selected_secondary_weapon == weapon);
+			if (ImGui::Selectable(weapon.name, is_selected))
+				secondary_weapon_failed = !bot.set_secondary_weapon(weapon);
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+	show_error_tooltip(secondary_weapon_failed);
+
+	static bool super_failed = false;
+	const auto& super_table = PlayerDataBot::Loadout::SUPER_TABLE;
+	const LoadoutSuper& selected_super = loadout.get_super();
+	if (ImGui::BeginCombo("Super", selected_super.name)) {
+		for (size_t i = 0; i < super_table.size(); ++i) {
+			const auto& super = super_table[i];
+			bool is_selected = (selected_super == super);
+			if (ImGui::Selectable(super.name, is_selected))
+				super_failed = !bot.set_super(super);
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+	show_error_tooltip(super_failed);
+
+	static bool charm_failed = false;
+	const auto& charm_table = PlayerDataBot::Loadout::CHARM_TABLE;
+	const LoadoutCharm& selected_charm = loadout.get_charm();
+	if (ImGui::BeginCombo("Charm", selected_charm.name)) {
+		for (size_t i = 0; i < charm_table.size(); ++i) {
+			const auto& charm = charm_table[i];
+			bool is_selected = (selected_charm == charm);
+			if (ImGui::Selectable(charm.name, is_selected))
+				charm_failed = !bot.set_charm(charm);
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+	show_error_tooltip(charm_failed);
 }
 
 void CupheadBotUI::show_error_tooltip(bool error)

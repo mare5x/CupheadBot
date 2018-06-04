@@ -15,8 +15,9 @@ public:
 
 	// Map hacks
 	/** Allows walking through walls on the map/level selection screen. 
-		Note: must be on the level selection screen. */
-	void wallhack(bool enable);
+		Note: must be on the map. */
+	bool wallhack(bool enable);
+	DWORD get_wallhack_adr();
 	
 	// Player controller hacks
 	bool set_invincible_flag(bool invincible) { return player_controller.set_invincible(invincible); } 	/* Note: must be in a level. */

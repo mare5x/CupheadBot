@@ -33,12 +33,24 @@ void CupheadBot::exit()
 	player_controller.exit();
 }
 
-void CupheadBot::wallhack(bool enable)
+bool CupheadBot::wallhack(bool enable)
+{
+	DWORD adr = get_wallhack_adr();
+	if (adr)
+		write_memory<DWORD>(adr, enable ? 1 : 2);
+	return adr;
+}
+
+/* The chain should always be valid, except on the title screen. */
+DWORD CupheadBot::get_wallhack_adr()
 {
 	DWORD ptr_chain = read_memory<DWORD>((DWORD)cuphead_module + 0x104FA20);
+	if (!ptr_chain) return 0;
 	ptr_chain = read_memory<DWORD>(ptr_chain + 4);
+	if (!ptr_chain) return 0;
 	ptr_chain = read_memory<DWORD>(ptr_chain + 0x44);
-	write_memory<DWORD>(ptr_chain, enable ? 1 : 2);
+	if (!ptr_chain) return 0;
+	return ptr_chain;
 }
 
 bool CupheadBot::update_super_meter_hud()
