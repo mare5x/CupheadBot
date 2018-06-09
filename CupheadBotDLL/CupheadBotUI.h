@@ -29,6 +29,7 @@ public:
 	bool is_visible() const { return ui_visible; }
 	bool is_exit_scheduled() const { return exit_scheduled; }
 	bool is_imgui_initialized() const { return imgui_initialized; }
+	bool can_exit() const { return exit_scheduled && !imgui_initialized && !d3d11_hook::is_hooked(); }
 private:
 	void render_diagnostics();
 	void render_loadout();
