@@ -44,7 +44,7 @@ namespace d3d11_hook {
 	};
 
 
-	HRESULT __stdcall present_callback(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
+	HRESULT __stdcall present_hooked(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
 
 
 	/** cb points to your externally defined implementation of the Present() function. 
@@ -57,4 +57,11 @@ namespace d3d11_hook {
 		NOTE: this works outside present_impl. To unhook from present_impl return true.
 	*/
 	void unhook_d3d11();
+
+	/** Request unhook, which will be called during the next time Present gets called. 
+		Use this function to make sure the hook is cleanly cleaned up or return true from present_impl.
+	*/
+	void request_unhook_d3d11();
+
+	bool is_hooked();
 }

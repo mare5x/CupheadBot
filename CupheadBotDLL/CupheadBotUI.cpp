@@ -279,6 +279,7 @@ void CupheadBotUI::show_error_tooltip(bool error)
 	}
 }
 
+/* Called from Cuphead.exe's thread. */
 bool CupheadBotUI::present_impl(ID3D11Device* device, ID3D11DeviceContext* device_context, IDXGISwapChain* swap_chain)
 {
 	CupheadBotUI& ui = *ui_ptr;
