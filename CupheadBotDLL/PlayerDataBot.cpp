@@ -7,7 +7,10 @@ const std::array<PlayerDataBot::Loadout::Weapon, PlayerDataBot::Loadout::N_WEAPO
 	{ "CHASER", 1460621839 },
 	{ "LOBBER", 1467024095 },
 	{ "CHARGE", 1466416941 },
-	{ "ROUNDABOUT", 1466518900 }
+	{ "ROUNDABOUT", 1466518900 },
+	{ "TRIPLE LASER", 0x58A3110F },
+	{ "ARC", 0x56F2E227 },
+	{ "EXPLODER", 0x575FF384 }
 } };
 
 
@@ -17,7 +20,8 @@ const std::array<PlayerDataBot::Loadout::Charm, PlayerDataBot::Loadout::N_CHARMS
 	{ "SMOKE BOMB", 0x57151B56 },
 	{ "P. SUGAR", 0x58A299CC },
 	{ "TWIN HEART", 0x5971F75B },
-	{ "WHETSTONE", 0x5971ACAF }
+	{ "WHETSTONE", 0x5971ACAF },
+	{ "PIT SAVER", 0x58A2AF58 }
 } };
 
 

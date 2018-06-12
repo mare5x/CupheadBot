@@ -13,7 +13,7 @@ public:
 			DWORD id;
 		};
 
-		static const size_t N_WEAPONS = 6;
+		static const size_t N_WEAPONS = 9;
 		typedef _LoadoutItem Weapon;
 		static const std::array<Weapon, N_WEAPONS> WEAPON_TABLE;  // Index to Weapon table
 
@@ -21,7 +21,7 @@ public:
 		typedef _LoadoutItem Super;
 		static const std::array<Super, N_SUPERS> SUPER_TABLE;
 
-		static const size_t N_CHARMS = 6;
+		static const size_t N_CHARMS = 7;
 		typedef _LoadoutItem Charm;
 		static const std::array<Charm, N_CHARMS> CHARM_TABLE;
 
