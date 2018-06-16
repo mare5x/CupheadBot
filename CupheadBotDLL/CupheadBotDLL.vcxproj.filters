@@ -48,6 +48,12 @@
     <ClCompile Include="PlayerDataBot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MonoWrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LoggerUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h">
@@ -87,6 +93,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PlayerDataBot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MonoWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LoggerUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

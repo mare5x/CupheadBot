@@ -1,5 +1,5 @@
 #include "CupheadBot.h"
-
+#include "LoggerUI.h"
 
 DWORD CupheadBot::original_infinite_damage_func = 0;
 DWORD CupheadBot::switch_weapon_function_adr = 0;
@@ -31,6 +31,64 @@ void CupheadBot::exit()
 	if (invincible_adr)
 		set_invincible(false);
 	player_controller.exit();
+	mono.detach();
+}
+
+/** If DebugConsole::Show is called, the game will crash when exiting to desktop!
+	NOTE: Must not be on the title screen to work. 
+*/
+bool CupheadBot::toggle_debug_console()
+{
+	void* image = mono.find_image("Assembly-CSharp");
+	void* debug_console_class = mono.get_class(image, "DebugConsole");
+
+	// alternate way to find methods:
+	//void* method = mono.get_method_image("DebugConsole:Hide", image);
+
+	void* console_is_visible_method = mono.get_method_class(debug_console_class, "get_IsVisible");
+	bool is_console_visible = mono.runtime_invoke<bool>(console_is_visible_method);  // must be on map to work
+
+	if (is_console_visible) {
+		void* hide_console_method = mono.get_method_class(debug_console_class, "Hide");
+		void* hide_console_adr = mono.jit_method(hide_console_method);
+		ui_logger::log("DebugConsole::Hide() (0x%x) -> 0x%x\n", hide_console_method, hide_console_adr);
+		if (hide_console_adr) {
+			__asm { call[hide_console_adr] }
+		}
+		else {
+			ui_logger::error("ERROR: hide console failed!\n");
+			return false;
+		}
+	}
+	else {
+		void* show_console_method = mono.get_method_class(debug_console_class, "Show");
+		void* show_console_adr = mono.jit_method(show_console_method);
+		ui_logger::log("DebugConsole::Show() (0x%x) -> 0x%x\n", show_console_method, show_console_adr);
+
+		if (show_console_adr) {
+			__asm { call[show_console_adr] }
+		}
+		else {
+			ui_logger::error("ERROR: show console failed!\n");
+			return false;
+		}
+	}
+	return true;
+}
+
+bool CupheadBot::log_mono_class_methods(const char * class_name)
+{
+	void* image = mono.find_image("Assembly-CSharp");
+	void* klass = mono.get_class(image, class_name);
+	if (!klass) {
+		ui_logger::error("%s not found!\n", class_name);
+		return false;
+	}
+	ui_logger::log("%s (0x%x) methods:\n", class_name, klass);
+	for (auto method : mono.get_methods(klass)) {
+		ui_logger::log("0x%x -> %s\n", method, mono.get_method_name(method));
+	}
+	return true;
 }
 
 bool CupheadBot::wallhack(bool enable)

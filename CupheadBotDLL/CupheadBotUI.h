@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "d3d11_hook.h"
 #include "CupheadBot.h"
+#include "LoggerUI.h"
 
 
 class CupheadBotUI
@@ -31,14 +32,17 @@ public:
 	bool is_imgui_initialized() const { return imgui_initialized; }
 	bool can_exit() const { return exit_scheduled && !imgui_initialized && !d3d11_hook::is_hooked(); }
 private:
+	void on_first_frame();
+
 	void render_diagnostics();
 	void render_loadout();
 	void show_error_tooltip(bool error);
 
 	// UI flags
 	bool ui_visible;
-	bool ui_wallhack_enabled;
+	bool ui_logger_visible;
 	bool ui_demo_visible;
+	bool ui_wallhack_enabled;
 	bool ui_invincibility;
 	bool ui_infinite_jumping;
 	bool ui_infinite_dashing;
@@ -46,6 +50,8 @@ private:
 	bool ui_no_cost_super;
 
 	int ui_money;
+
+	bool first_frame_rendered;
 
 	// ImGUI flags
 	bool imgui_initialized;

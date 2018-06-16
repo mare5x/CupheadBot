@@ -5,6 +5,7 @@
 #include "memory_tools.h"
 #include "PlayerControllerBot.h"
 #include "PlayerDataBot.h"
+#include "MonoWrapper.h"
 
 class CupheadBot
 {
@@ -12,6 +13,10 @@ public:
 	CupheadBot(HMODULE dll_handle);
 
 	void exit();
+	
+	// mono
+	bool toggle_debug_console();
+	bool log_mono_class_methods(const char* class_name);
 
 	// Map hacks
 	/** Allows walking through walls on the map/level selection screen. 
@@ -53,6 +58,8 @@ public:
 	DWORD get_infinite_dash_adr() const { return infinite_dash_adr; }
 	PlayerDataBot& get_player_data() { return player_data; }
 
+	MonoWrapper& get_mono_wrapper() { return mono; }
+
 	static DWORD original_infinite_damage_func;
 private:
 	/* Helper function that sets dst to find_signature() if necessary and returns the success of the operation. */
@@ -73,6 +80,8 @@ private:
 	DWORD infinite_dash_adr;
 	static DWORD switch_weapon_function_adr;
 	static DWORD hud_super_meter_update_adr, hud_hp_update_adr;
+
+	MonoWrapper mono;
 
 	// Common handles
 	HMODULE dll_module;

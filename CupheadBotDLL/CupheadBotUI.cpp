@@ -15,19 +15,38 @@ CupheadBotUI::CupheadBotUI(HMODULE dll_handle)
 	ui_ptr = this;
 
 	ui_visible = true;
+	ui_logger_visible = true;
 
 	d3d11_hook::hook_d3d11(&CupheadBotUI::present_impl);
 	init_ui(d3d11_hook::g_p_device, d3d11_hook::g_p_device_context);
-
-	ui_money = bot.get_money();
 }
 
+// Called from Cuphead's thread
 void CupheadBotUI::render_ui()
 {
+	if (!first_frame_rendered)
+		on_first_frame();
+
 	ImGui::Begin("CupheadBot", &ui_visible);
 
 	if (ImGui::CollapsingHeader("Diagnostics"))
 		render_diagnostics();
+
+	ImGui::Checkbox("Show log", &ui_logger_visible);
+	if (ui_logger_visible)
+		ui_logger::render("Log");
+
+	static char class_name_buf[512];
+	ImGui::InputText("", class_name_buf, sizeof(class_name_buf));
+	ImGui::SameLine();
+	if (ImGui::Button("List class methods"))
+		bot.log_mono_class_methods(class_name_buf);
+
+	static bool toggle_console_failed = false;
+	if (ImGui::Button("Toggle Debug console")) {
+		toggle_console_failed = !bot.toggle_debug_console();
+	}
+	show_error_tooltip(toggle_console_failed);
 
 	static bool wallhack_failed = false;
 	if (ImGui::Checkbox("Wallhack", &ui_wallhack_enabled)) {
@@ -126,6 +145,7 @@ void CupheadBotUI::init_ui(ID3D11Device* p_device, ID3D11DeviceContext* p_device
 	hook_input_handler();
 }
 
+// Most likely called from Cuphead's thread.
 void CupheadBotUI::exit_ui()
 {
 	bot.exit();
@@ -163,6 +183,15 @@ void CupheadBotUI::hook_input_handler()
 void CupheadBotUI::unhook_input_handler()
 {
 	SetWindowLongPtr(bot.get_cuphead_window_handle(), GWLP_WNDPROC, (LONG_PTR)orig_wndproc);
+}
+
+// Called from Cuphead's thread.
+void CupheadBotUI::on_first_frame()
+{
+	// mono must get attached to the current thread of execution (Cuphead's thread), otherwise it'll crash.
+	// If I attached mono during initialization, the code would be running inside CupheadBotDll's thread and not the thread all hacks will be applied in.
+	bot.get_mono_wrapper().attach();
+	first_frame_rendered = true;
 }
 
 void CupheadBotUI::render_diagnostics()
