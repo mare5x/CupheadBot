@@ -8,6 +8,8 @@ extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam
 
 CupheadBotUI* ui_ptr;  // yikes 0w0
 
+float delta_mouse_wheel = 0.0f;
+
 
 CupheadBotUI::CupheadBotUI(HMODULE dll_handle)
 	:bot(dll_handle)
@@ -29,22 +31,20 @@ void CupheadBotUI::render_ui()
 
 	ImGui::Begin("CupheadBot", &ui_visible);
 
-	if (ImGui::CollapsingHeader("Diagnostics"))
-		render_diagnostics();
-
-	ImGui::Checkbox("Show log", &ui_logger_visible);
-	if (ui_logger_visible)
-		ui_logger::render("Log");
-
-	static char class_name_buf[512];
-	ImGui::InputText("", class_name_buf, sizeof(class_name_buf));
-	ImGui::SameLine();
-	if (ImGui::Button("List class methods"))
-		bot.log_mono_class_methods(class_name_buf);
+	if (ImGui::Button("Show/hide debugger"))
+		ui_debug_window_visible = !ui_debug_window_visible;
+	
+	if (ui_debug_window_visible)
+		render_debug_window();
 
 	static bool toggle_console_failed = false;
-	if (ImGui::Button("Toggle Debug console")) {
+	if (ImGui::Button("Toggle in-game Debug console")) {
 		toggle_console_failed = !bot.toggle_debug_console();
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::Text("Warning: The game will crash when exiting the game.");
+		ImGui::EndTooltip();
 	}
 	show_error_tooltip(toggle_console_failed);
 
@@ -166,6 +166,8 @@ LRESULT CALLBACK CupheadBotUI::input_handler(_In_ HWND hwnd, _In_ UINT uMsg, _In
 	if (ui_ptr->is_visible()) {
 		ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam);
 		ImGuiIO& io = ImGui::GetIO();
+		if (uMsg == WM_MOUSEWHEEL)
+			delta_mouse_wheel = io.MouseWheel;
 		if (io.WantCaptureKeyboard) // || io.WantCaptureMouse)
 			return true;
 	}
@@ -192,6 +194,27 @@ void CupheadBotUI::on_first_frame()
 	// If I attached mono during initialization, the code would be running inside CupheadBotDll's thread and not the thread all hacks will be applied in.
 	bot.get_mono_wrapper().attach();
 	first_frame_rendered = true;
+}
+
+void CupheadBotUI::render_debug_window()
+{
+	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Debugger", &ui_debug_window_visible);
+
+	if (ImGui::CollapsingHeader("Diagnostics"))
+		render_diagnostics();
+
+	ImGui::Checkbox("Show log", &ui_logger_visible);
+	if (ui_logger_visible)
+		ui_logger::render("Log", &ui_logger_visible);
+
+	static char class_name_buf[512];
+	ImGui::InputText("", class_name_buf, sizeof(class_name_buf));
+	ImGui::SameLine();
+	if (ImGui::Button("List class methods"))
+		bot.log_mono_class_methods(class_name_buf);
+
+	ImGui::End();
 }
 
 void CupheadBotUI::render_diagnostics()
@@ -321,12 +344,22 @@ bool CupheadBotUI::present_impl(ID3D11Device* device, ID3D11DeviceContext* devic
 	}
 	if (!ui.is_imgui_initialized() || !ui.is_visible()) return false;
 
+	// io must know mousewheel data before starting a new frame and it resets it after each frame, so if we set 
+	// the data in the input handler it might get set in the middle of a frame resulting in the event to get discarded
+	// this is a workaround: check if the mouse wheel info changes during a frame and set it before each frame
+	// if the wheel didn't change the event was handled so reset it ...
+	float old_wheel = delta_mouse_wheel;
+	ImGui::GetIO().MouseWheel = delta_mouse_wheel;
+
 	ImGui_ImplDX11_NewFrame();
 
 	ui.render_ui();
 
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+	if (old_wheel == delta_mouse_wheel)
+		delta_mouse_wheel = 0;
 
 	return false;
 }

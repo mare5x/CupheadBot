@@ -43,7 +43,7 @@ bool CupheadBot::toggle_debug_console()
 	void* debug_console_class = mono.get_class(image, "DebugConsole");
 
 	// alternate way to find methods:
-	//void* method = mono.get_method_image("DebugConsole:Hide", image);
+	// void* method = mono.get_method_image("DebugConsole:Hide", image);
 
 	void* console_is_visible_method = mono.get_method_class(debug_console_class, "get_IsVisible");
 	bool is_console_visible = mono.runtime_invoke<bool>(console_is_visible_method);  // must be on map to work

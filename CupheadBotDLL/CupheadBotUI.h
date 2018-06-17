@@ -34,12 +34,14 @@ public:
 private:
 	void on_first_frame();
 
+	void render_debug_window();
 	void render_diagnostics();
 	void render_loadout();
 	void show_error_tooltip(bool error);
 
 	// UI flags
 	bool ui_visible;
+	bool ui_debug_window_visible;
 	bool ui_logger_visible;
 	bool ui_demo_visible;
 	bool ui_wallhack_enabled;
