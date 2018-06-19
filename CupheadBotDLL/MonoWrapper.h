@@ -1,6 +1,14 @@
+// Sources:
+// https://www.mono-project.com/docs/advanced/embedding/
+// http://docs.go-mono.com/?link=root:/embed
+// cheat-engine/Cheat Engine/bin/autorun/monoscript.lua
+// cheat-engine/Cheat Engine/MonoDataCollector/MonoDataCollector/PipeServer.cpp
+
+
 #pragma once
 #include <Windows.h>
 #include <vector>
+#include <sstream>
 
 class MonoWrapper
 {
@@ -15,12 +23,18 @@ public:
 	std::vector<void*> get_domains();
 	std::vector<UINT64> get_assemblies();
 	std::vector<void*> get_images();
+	std::vector<void*> get_classes(void* image);
+	std::vector<void*> get_methods(void* klass);
 
 	void* find_image(const char* name);
 	const char* get_image_name(void* image);
 
 	void* get_class(void* image, const char* name, const char* name_space = "");
-	std::vector<void*> get_methods(void* klass);
+	void* get_class_parent(void* klass);
+	const char* get_class_namespace(void* klass);
+	const char* get_class_name(void* klass);
+	std::string get_full_class_name(void* klass);
+
 	void* get_method_class(void* klass, const char* name, int param_count = -1);
 	void* get_method_image(const char* name, void* image);
 	const char* get_method_name(void* method);
@@ -31,6 +45,10 @@ public:
 	template <typename T>
 	T runtime_invoke(void* method, void* obj = NULL, void** params = NULL, void** exc = NULL);
 private:
+	// Internal functions
+	void class_name_builder(void* klass, std::ostringstream& os);
+
+	// Mono boilerplate
 	typedef void* (__cdecl *MONO_THREAD_ATTACH)(void *domain);
 	typedef void (__cdecl *MONO_THREAD_DETACH)(void *monothread);
 
@@ -43,10 +61,15 @@ private:
 	typedef void* (__cdecl *MONO_ASSEMBLY_GET_IMAGE)(void* assembly);
 
 	typedef const char* (__cdecl *MONO_IMAGE_GET_NAME)(void* image);
+	typedef int (__cdecl *MONO_IMAGE_GET_TABLE_ROWS)(void* image, int table_id);
 
 	typedef void* (__cdecl *MONO_CLASS_FROM_NAME)(void* image, const char* name_space, const char* name);
 	typedef void* (__cdecl *MONO_CLASS_GET_METHODS)(void* klass, void* iter);
 	typedef void* (__cdecl *MONO_CLASS_GET_METHOD_FROM_NAME)(void* klass, const char* name, int param_count);
+	typedef const char* (__cdecl *MONO_CLASS_GET_NAMESPACE)(void* klass);
+	typedef const char* (__cdecl *MONO_CLASS_GET_NAME)(void* klass);
+	typedef void* (__cdecl *MONO_CLASS_GET_PARENT)(void* klass);
+	typedef void* (__cdecl *MONO_CLASS_GET)(void* image, UINT32 type_token);
 
 	typedef const char* (__cdecl *MONO_METHOD_GET_NAME)(void* method);
 	typedef void* (__cdecl *MONO_METHOD_DESC_NEW)(const char *name, bool include_namespace);
@@ -72,10 +95,15 @@ private:
 	MONO_ASSEMBLY_GET_IMAGE mono_assembly_get_image;
 
 	MONO_IMAGE_GET_NAME mono_image_get_name;
+	MONO_IMAGE_GET_TABLE_ROWS mono_image_get_table_rows;
 
 	MONO_CLASS_FROM_NAME mono_class_from_name;
 	MONO_CLASS_GET_METHODS mono_class_get_methods;
 	MONO_CLASS_GET_METHOD_FROM_NAME mono_class_get_method_from_name;
+	MONO_CLASS_GET_NAMESPACE mono_class_get_namespace;
+	MONO_CLASS_GET_NAME mono_class_get_name;
+	MONO_CLASS_GET_PARENT mono_class_get_parent;
+	MONO_CLASS_GET mono_class_get;
 	
 	MONO_METHOD_GET_NAME mono_method_get_name;
 	MONO_METHOD_DESC_NEW mono_method_desc_new;  /* [namespace.]classname:methodname[(args...)] */
@@ -90,8 +118,8 @@ private:
 	MONO_JIT_INFO_TABLE_FIND mono_jit_info_table_find;
 	MONO_JIT_INFO_GET_CODE_START mono_jit_info_get_code_start;
 
+	// Data
 	HMODULE mono_dll_handle;
-
 	void* mono_thread;
 };
 

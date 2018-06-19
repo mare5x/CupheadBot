@@ -208,6 +208,10 @@ void CupheadBotUI::render_debug_window()
 	if (ui_logger_visible)
 		ui_logger::render("Log", &ui_logger_visible);
 
+	if (ImGui::Button("List classes in Assembly-CSharp")) {
+		bot.log_mono_classes(false);
+	}
+
 	static char class_name_buf[512];
 	ImGui::InputText("", class_name_buf, sizeof(class_name_buf));
 	ImGui::SameLine();

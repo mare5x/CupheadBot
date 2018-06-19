@@ -101,5 +101,8 @@
     <ClInclude Include="LoggerUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mono_metadata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

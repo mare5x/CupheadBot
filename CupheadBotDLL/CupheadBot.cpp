@@ -76,6 +76,15 @@ bool CupheadBot::toggle_debug_console()
 	return true;
 }
 
+bool CupheadBot::log_mono_classes(bool full_name)
+{
+	void* image = mono.find_image("Assembly-CSharp");
+	for (void* klass : mono.get_classes(image)) {
+		ui_logger::log("0x%x: %s\n", klass, full_name ? mono.get_full_class_name(klass).c_str() : mono.get_class_name(klass));
+	}
+	return true;
+}
+
 bool CupheadBot::log_mono_class_methods(const char * class_name)
 {
 	void* image = mono.find_image("Assembly-CSharp");

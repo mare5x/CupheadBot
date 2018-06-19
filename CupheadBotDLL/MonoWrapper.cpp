@@ -1,11 +1,5 @@
-// Sources:
-// https://www.mono-project.com/docs/advanced/embedding/
-// http://docs.go-mono.com/?link=root:/embed
-// cheat-engine/Cheat Engine/bin/autorun/monoscript.lua
-// cheat-engine/Cheat Engine/MonoDataCollector/MonoDataCollector/PipeServer.cpp
-
-
 #include "MonoWrapper.h"
+#include "mono_metadata.h"
 
 MonoWrapper::MonoWrapper()
 {
@@ -21,10 +15,15 @@ MonoWrapper::MonoWrapper()
 	mono_assembly_get_image = (MONO_ASSEMBLY_GET_IMAGE)GetProcAddress(mono_dll_handle, "mono_assembly_get_image");
 
 	mono_image_get_name = (MONO_IMAGE_GET_NAME)GetProcAddress(mono_dll_handle, "mono_image_get_name");
+	mono_image_get_table_rows = (MONO_IMAGE_GET_TABLE_ROWS)GetProcAddress(mono_dll_handle, "mono_image_get_table_rows");
 
 	mono_class_from_name = (MONO_CLASS_FROM_NAME)GetProcAddress(mono_dll_handle, "mono_class_from_name");
 	mono_class_get_methods = (MONO_CLASS_GET_METHODS)GetProcAddress(mono_dll_handle, "mono_class_get_methods");
 	mono_class_get_method_from_name = (MONO_CLASS_GET_METHOD_FROM_NAME)GetProcAddress(mono_dll_handle, "mono_class_get_method_from_name");
+	mono_class_get_namespace = (MONO_CLASS_GET_NAMESPACE)GetProcAddress(mono_dll_handle, "mono_class_get_namespace");
+	mono_class_get_name = (MONO_CLASS_GET_NAME)GetProcAddress(mono_dll_handle, "mono_class_get_name");
+	mono_class_get_parent = (MONO_CLASS_GET_PARENT)GetProcAddress(mono_dll_handle, "mono_class_get_parent");
+	mono_class_get = (MONO_CLASS_GET)GetProcAddress(mono_dll_handle, "mono_class_get");
 
 	mono_method_get_name = (MONO_METHOD_GET_NAME)GetProcAddress(mono_dll_handle, "mono_method_get_name");
 	mono_method_desc_free = (MONO_METHOD_DESC_FREE)GetProcAddress(mono_dll_handle, "mono_method_desc_free");
@@ -91,6 +90,19 @@ std::vector<void*> MonoWrapper::get_images()
 	return v;
 }
 
+std::vector<void*> MonoWrapper::get_classes(void* image)
+{
+	// Read the docs for mono metadata access
+
+	std::vector<void*> classes;
+	UINT32 rows = mono_image_get_table_rows(image, MONO_TABLE_TYPEDEF);
+	for (UINT32 i = 1; i < rows; ++i) {
+		void* klass = mono_class_get(image, MONO_TOKEN_TYPE_DEF | (i + 1));
+		classes.push_back(klass);
+	}
+	return classes;
+}
+
 void * MonoWrapper::find_image(const char * name)
 {
 	auto images = get_images();
@@ -109,6 +121,42 @@ const char * MonoWrapper::get_image_name(void * image)
 void * MonoWrapper::get_class(void * image, const char * name, const char * name_space)
 {
 	return mono_class_from_name(image, name_space, name);
+}
+
+void * MonoWrapper::get_class_parent(void * klass)
+{
+	return mono_class_get_parent(klass);
+}
+
+const char * MonoWrapper::get_class_namespace(void * klass)
+{
+	return mono_class_get_namespace(klass);
+}
+
+const char * MonoWrapper::get_class_name(void * klass)
+{
+	return mono_class_get_name(klass);
+}
+
+void MonoWrapper::class_name_builder(void * klass, std::ostringstream & os)
+{
+	void* parent = get_class_parent(klass);
+	if (!parent)
+		os << get_class_name(klass);
+	else {
+		class_name_builder(parent, os);
+		os << "." << get_class_name(klass);
+	}
+}
+
+std::string MonoWrapper::get_full_class_name(void * klass)
+{
+	if (!klass)
+		return "";
+
+	std::ostringstream os;
+	class_name_builder(klass, os);
+	return os.str();
 }
 
 std::vector<void*> MonoWrapper::get_methods(void * klass)
@@ -146,3 +194,4 @@ void * MonoWrapper::jit_method(void * method)
 {
 	return mono_compile_method(method);
 }
+

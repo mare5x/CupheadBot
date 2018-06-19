@@ -179,6 +179,7 @@
     <ClInclude Include="memory_tools.h" />
     <ClInclude Include="CupheadBotUI.h" />
     <ClInclude Include="MonoWrapper.h" />
+    <ClInclude Include="mono_metadata.h" />
     <ClInclude Include="PlayerControllerBot.h" />
     <ClInclude Include="PlayerDataBot.h" />
   </ItemGroup>

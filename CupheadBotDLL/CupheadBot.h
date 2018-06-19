@@ -16,6 +16,7 @@ public:
 	
 	// mono
 	bool toggle_debug_console();
+	bool log_mono_classes(bool full_name = false);
 	bool log_mono_class_methods(const char* class_name);
 
 	// Map hacks
