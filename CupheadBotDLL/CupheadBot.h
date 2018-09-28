@@ -82,7 +82,9 @@ private:
 	static DWORD switch_weapon_function_adr;
 	static DWORD hud_super_meter_update_adr, hud_hp_update_adr;
 
+	// Mono
 	MonoWrapper mono;
+	void* mono_image;  // Assembly-CSharp image
 
 	// Common handles
 	HMODULE dll_module;

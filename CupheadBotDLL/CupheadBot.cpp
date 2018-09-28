@@ -18,6 +18,10 @@ CupheadBot::CupheadBot(HMODULE dll_handle)
 	infinite_jump_info.original_bytes = { 0x0F, 0x85, 0xBC, 0x01, 0x00, 0x00 };
 	infinite_parry_info.original_bytes = { 0x8B, 0x47, 0x58, 0xC7, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x47, 0x4C, 0xC7, 0x40, 0x08, 0x01, 0x00, 0x00, 0x00 };
 	infinite_damage_info.original_bytes = { 0x8B, 0x46, 0x38, 0x83, 0xEC, 0x08 };
+
+	mono_image = mono.find_image("Assembly-CSharp");
+	if (!mono_image)
+		ui_logger::error("Could not find the Assembly-CSharp image!\n");
 }
 
 void CupheadBot::exit()
@@ -39,8 +43,7 @@ void CupheadBot::exit()
 */
 bool CupheadBot::toggle_debug_console()
 {
-	void* image = mono.find_image("Assembly-CSharp");
-	void* debug_console_class = mono.get_class(image, "DebugConsole");
+	void* debug_console_class = mono.get_class(mono_image, "DebugConsole");
 
 	// alternate way to find methods:
 	// void* method = mono.get_method_image("DebugConsole:Hide", image);
@@ -352,6 +355,26 @@ bool CupheadBot::set_infinite_parry(bool inf_parry)
 	else {
 		write_code_buffer(infinite_parry_info.hook_at, infinite_parry_info.original_bytes.data(), infinite_parry_info.original_bytes.size());
 	}
+
+	// Set infinite attack parry (whetstone)
+	// Just use mono to get the function address
+	void* set_attack_parry_used_method = mono.get_method_image("LevelPlayerParryController:set_AttackParryUsed", mono_image);
+	void* p_set_attack_parry_used = mono.jit_method(set_attack_parry_used_method);
+	ui_logger::log("get_AttackParryUsed: %x\n", p_set_attack_parry_used);
+	if (!p_set_attack_parry_used) return false;
+
+	DWORD attack_parry_nop_adr = (DWORD)p_set_attack_parry_used + 0xd;
+	static BYTE original_parry_bytes[3];
+	if (!original_parry_bytes[0])
+		read_memory(attack_parry_nop_adr, original_parry_bytes, 3);
+
+	if (inf_parry) {
+		nop_fill(attack_parry_nop_adr, 3);
+	}
+	else {
+		write_code_buffer(attack_parry_nop_adr, original_parry_bytes, 3);
+	}
+
 	return true;
 }
 

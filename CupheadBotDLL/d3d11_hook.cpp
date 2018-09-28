@@ -98,9 +98,9 @@ void d3d11_hook::hook_d3d11(d3d11_present_impl cb)
 		&swapChainDesc, &p_swapchain, &p_device, NULL, &p_device_context);
 
 	// Since a vtable is shared by all instances of the same class, we can use our 
-	// dummy device/swapchain to get the address of the present function used by the d3d11 program's swapchain
-	// the Present function is used to render content to the display, so it is called every frame by every program
-	// that uses d3d11
+	// dummy device/swapchain to get the address of the present function used by the d3d11 program's swapchain.
+	// The Present function is used to render content to the display, so it is called every frame by every program
+	// that uses d3d11.
 	g_p_present = (d3d11_Present)get_VF((DWORD)p_swapchain, 8);
 
 	// with the address of the Present function, we can apply a jump/detour hook so that the Present function will
