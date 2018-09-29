@@ -7,6 +7,14 @@
 #include "PlayerDataBot.h"
 #include "MonoWrapper.h"
 
+struct Vec2f {
+	float x, y;
+	Vec2f() : x(0), y(0) {}
+	Vec2f(float _x, float _y) : x(_x), y(_y) {}
+	
+	void set_zero() { x = y = 0; }
+};
+
 class CupheadBot
 {
 public:
@@ -24,6 +32,8 @@ public:
 		Note: must be on the map. */
 	bool wallhack(bool enable);
 	DWORD get_wallhack_adr();
+
+	Vec2f& get_map_player_position();
 	
 	// Player controller hacks
 	bool set_invincible_flag(bool invincible) { return player_controller.set_invincible(invincible); } 	/* Note: must be in a level. */

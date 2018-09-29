@@ -245,6 +245,9 @@ void CupheadBotUI::render_diagnostics()
 
 	ImGui::Text("PlayerData: %x", bot.get_player_data().get_player_data_address());
 	ImGui::Text("Loadout address: %x", bot.get_player_data().get_loadout_address());
+
+	Vec2f& map_player_pos = bot.get_map_player_position();
+	ImGui::Text("Map player position: (%f, %f)", map_player_pos.x, map_player_pos.y);
 }
 
 void CupheadBotUI::render_loadout()

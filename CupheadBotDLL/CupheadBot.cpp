@@ -81,17 +81,18 @@ bool CupheadBot::toggle_debug_console()
 
 bool CupheadBot::log_mono_classes(bool full_name)
 {
-	void* image = mono.find_image("Assembly-CSharp");
-	for (void* klass : mono.get_classes(image)) {
+	for (void* klass : mono.get_classes(mono_image)) {
 		ui_logger::log("0x%x: %s\n", klass, full_name ? mono.get_full_class_name(klass).c_str() : mono.get_class_name(klass));
+		for (auto method : mono.get_methods(klass)) {
+			ui_logger::log("\t0x%x -> %s\n", method, mono.get_method_name(method));
+		}
 	}
 	return true;
 }
 
 bool CupheadBot::log_mono_class_methods(const char * class_name)
 {
-	void* image = mono.find_image("Assembly-CSharp");
-	void* klass = mono.get_class(image, class_name);
+	void* klass = mono.get_class(mono_image, class_name);
 	if (!klass) {
 		ui_logger::error("%s not found!\n", class_name);
 		return false;
@@ -121,6 +122,20 @@ DWORD CupheadBot::get_wallhack_adr()
 	ptr_chain = read_memory<DWORD>(ptr_chain + 0x44);
 	if (!ptr_chain) return 0;
 	return ptr_chain;
+}
+
+Vec2f& CupheadBot::get_map_player_position()
+{
+	// wallhack_adr + 0xC  == cuphead map x position
+	//	            + 0x10 ==             y position
+
+	DWORD adr = get_wallhack_adr();
+	static Vec2f pos;
+	if (adr) {
+		pos.x = read_memory<float>(adr + 0xc);
+		pos.y = read_memory<float>(adr + 0x10);
+	}
+	return pos;
 }
 
 bool CupheadBot::update_super_meter_hud()
