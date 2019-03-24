@@ -30,7 +30,7 @@ DWORD wallhack_off(HANDLE proc)
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
 	DWORD PID = get_pid("Cuphead");
 	if (!PID) return -1;
@@ -42,8 +42,12 @@ int main()
 		return -1;
 	}
 
-	// copy dll to Cuphead game directory
-	HMODULE dll_handle = load_dll(proc, L"C:\\Users\\Mare5\\projects\\hacking\\CupheadBotCL\\Debug\\CupheadBotDLL.dll");
+	// copy dll to Cuphead game directory or supply absolute dll path
+	HMODULE dll_handle = load_dll(proc, argc > 1 ? argv[1] : "CupheadBot.dll");
+	if (!dll_handle) {
+		log_error("Could not load DLL! Make sure the dll path is absolute");
+		return -1;
+	}
 
 	//std::cout << "Base: " << std::hex << get_base_address(proc) << '\n';
 

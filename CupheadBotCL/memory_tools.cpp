@@ -174,16 +174,16 @@ void write_code_buffer(HANDLE proc, DWORD address, const BYTE * buffer, size_t s
 }
 
 
-HMODULE load_dll(HANDLE proc, const wchar_t* dll_path)
+HMODULE load_dll(HANDLE proc, const char* dll_path)
 {
 	// write the dll path to process memory 
-	size_t path_len = wcslen(dll_path) + 1;
-	LPVOID remote_string_address = VirtualAllocEx(proc, NULL, path_len * 2, MEM_COMMIT, PAGE_EXECUTE);
-	WriteProcessMemory(proc, remote_string_address, dll_path, path_len * 2, NULL);
+	size_t path_len = strlen(dll_path) + 1;
+	LPVOID remote_string_address = VirtualAllocEx(proc, NULL, path_len, MEM_COMMIT, PAGE_EXECUTE);
+	WriteProcessMemory(proc, remote_string_address, dll_path, path_len, NULL);
 
 	// get the address of the LoadLibrary()
 	HMODULE k32 = GetModuleHandleA("kernel32.dll");
-	LPVOID load_library_adr = GetProcAddress(k32, "LoadLibraryW");
+	LPVOID load_library_adr = GetProcAddress(k32, "LoadLibraryA");
 
 	// create the thread
 	HANDLE thread = CreateRemoteThread(proc, NULL, NULL, (LPTHREAD_START_ROUTINE)load_library_adr, remote_string_address, NULL, NULL);
