@@ -34,6 +34,12 @@ Available hacks:
 
 [Demo webm.](./demo.webm)
 
+## Setup
+
+  1. ```git clone https://github.com/mare5x/CupheadBot.git```
+  2. Open _CupheadBot.sln_ with _Microsoft Visual Studio_.
+  3. Build CupheadBotCL and CupheadBotDLL to get _CupheadBot.exe_ and _CupheadBot.dll_.
+
 ## About
 
 CupheadBot is a set of hacks for the game **Cuphead**.  
